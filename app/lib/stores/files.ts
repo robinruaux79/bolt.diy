@@ -94,7 +94,7 @@ export class FilesStore {
 
       const oldContent = this.getFile(filePath)?.content;
 
-      await webcontainer.fs.mkdir(path.dirname(filePath));
+      await webcontainer.fs.mkdir(path.dirname(filePath), { recursive: true });
       await webcontainer.fs.writeFile(relativePath, content);
 
       if (oldContent && !this.#modifiedFiles.has(filePath)) {

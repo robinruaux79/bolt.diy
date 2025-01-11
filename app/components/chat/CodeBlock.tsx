@@ -21,13 +21,17 @@ interface CodeBlockProps {
 export const CodeBlock = memo(
   ({ className, code, language = 'plaintext', theme = 'dark-plus', disableCopy = false }: CodeBlockProps) => {
     const [html, setHTML] = useState<string | undefined>(undefined);
+    const [json, setJson] = useState<Object | undefined>(undefined);
+    const [jsonHtml, setJsonHtml] = useState<string | undefined>(undefined);
     const [copied, setCopied] = useState(false);
     const files = useStore(workbenchStore.files);
+
 
     const [filepath, setFilepath] = useState("");
     const [isInputEnabled, setInputEnabled] = useState(false);
 
     const handleInsert = async () => {
+        console.log(files);
         if( !isInputEnabled ){
           setInputEnabled(true);
         }else{
@@ -62,12 +66,78 @@ export const CodeBlock = memo(
       logger.trace(`Language = ${language}`);
 
       const processCode = async () => {
+        let js;
+        try { js = JSON.parse(code);} catch (e) { }
+        setJson(js);
+        console.log(js)
+        if( js?.cmd === "EDIT_FILE" ) {
+          if( js.new_content){
+            if( js.lineToEdit ){
+              const file = workbenchStore.filesStore.getFile(js.file);
+              if( file ){
+                let lines = file.content.split("\n");
+                lines.splice(js.lineToEdit, 0, js.new_content);
+                await workbenchStore.filesStore.saveFile(js.file, lines.join("\n"));
+              }else{
+                await workbenchStore.filesStore.saveFile(js.file, js.new_content);
+              }
+            }else{
+              await workbenchStore.filesStore.saveFile(js.file, js.new_content);
+            }
+            workbenchStore.removeFromUnsaved(js.file);
+            workbenchStore.showWorkbench.set(true);
+            setJsonHtml(await codeToHtml(js.new_content, { lang: js.language || language, theme }));
+          }else{
+            if( js.editions ){
+
+              console.log(js)
+              const file = workbenchStore.filesStore.getFile(js.file);
+              if( file ){
+                let lines = file.content.split("\n");
+
+                let str = file.content;
+                let html = "";
+                let ind = 0;
+                console.log("js.editions", js.editions)
+
+                let lns = [...lines];
+                try {
+                js.editions.forEach(ev => {
+                  html = html + (ev.line) + ":" + (ev.type==="delete" ? "<span style='color:red'>-" + ev.content + '</span>' : (ev.content ? "<span style='color:green'>+" + ev.content + '</span>' : '')) + "<br />";
+                  if( ev.type === "delete" ){
+                    lns.splice(ev.line, 1);
+                  }else{
+                    lns[ev.line] = ev.content;
+                  }
+                });
+                } catch (e){
+                  console.log(e)
+                }
+
+                setJsonHtml(html);
+
+                await workbenchStore.filesStore.saveFile(js.file, lns.join("\n"));
+              }
+            }
+          }
+        }
         setHTML(await codeToHtml(code, { lang: language, theme }));
       };
 
       processCode();
     }, [code]);
 
+    if( json?.cmd ){
+      return <div className={classNames('relative group text-left', className)}>
+        {json.cmd === "ANALYSIS" && <>{json.content}</>}
+        {json.cmd === "EDIT_FILE" && json.new_content && <><b><pre>{json.file}</pre></b>
+          <div dangerouslySetInnerHTML={{ __html: jsonHtml ?? '' }}></div>
+        </>}
+        {json.cmd === "EDIT_FILE" && !json.new_content && <><b><pre>{json.file} {json.line && <>(line: {json.line})</>}</pre></b>
+          <div dangerouslySetInnerHTML={{ __html: jsonHtml ?? '' }}></div>
+        </>}
+      </div>;
+    }
     return (
       <div className={classNames('relative group text-left', className)}>
         <div
