@@ -7,7 +7,7 @@ export type EditorDocuments = Record<string, EditorDocument>;
 type SelectedFile = WritableAtom<string | undefined>;
 
 export class EditorStore {
-  #filesStore: FilesStore;
+  filesStore: FilesStore;
 
   selectedFile: SelectedFile = import.meta.hot?.data.selectedFile ?? atom<string | undefined>();
   documents: MapStore<EditorDocuments> = import.meta.hot?.data.documents ?? map({});
@@ -21,7 +21,7 @@ export class EditorStore {
   });
 
   constructor(filesStore: FilesStore) {
-    this.#filesStore = filesStore;
+    this.filesStore = filesStore;
 
     if (import.meta.hot) {
       import.meta.hot.data.documents = this.documents;

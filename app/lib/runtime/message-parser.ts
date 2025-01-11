@@ -143,6 +143,9 @@ export class StreamingMessageParser {
                 content = cleanoutMarkdownSyntax(content);
               }
 
+              const regex = /[\[{][^\]}]?[\]}]/g;
+              const jsons = currentAction.content.matchAll(regex);
+
               this._options.callbacks?.onActionStream?.({
                 artifactId: currentArtifact.id,
                 messageId,

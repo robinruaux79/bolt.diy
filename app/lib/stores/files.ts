@@ -8,6 +8,7 @@ import { WORK_DIR } from '~/utils/constants';
 import { computeFileModifications } from '~/utils/diff';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
+import path, { basename } from 'node:path';
 
 const logger = createScopedLogger('FilesStore');
 
@@ -80,6 +81,7 @@ export class FilesStore {
     this.#modifiedFiles.clear();
   }
 
+
   async saveFile(filePath: string, content: string) {
     const webcontainer = await this.#webcontainer;
 
@@ -92,20 +94,19 @@ export class FilesStore {
 
       const oldContent = this.getFile(filePath)?.content;
 
-      if (!oldContent) {
-        unreachable('Expected content to be defined');
-      }
-
+      await webcontainer.fs.mkdir(path.dirname(filePath));
       await webcontainer.fs.writeFile(relativePath, content);
 
-      if (!this.#modifiedFiles.has(filePath)) {
+      if (oldContent && !this.#modifiedFiles.has(filePath)) {
         this.#modifiedFiles.set(filePath, oldContent);
+        logger.info('File updated');
+      }else{
+        logger.info('File created');
       }
 
       // we immediately update the file and don't rely on the `change` event coming from the watcher
       this.files.setKey(filePath, { type: 'file', content, isBinary: false });
 
-      logger.info('File updated');
     } catch (error) {
       logger.error('Failed to update file content\n\n', error);
 

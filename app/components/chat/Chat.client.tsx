@@ -263,7 +263,7 @@ export const ChatImpl = memo(
        */
       await workbenchStore.saveAllFiles();
 
-      const fileModifications = workbenchStore.getFileModifcations();
+      const fileModifications = workbenchStore.getFileModifications();
 
       chatStore.setKey('aborted', false);
 

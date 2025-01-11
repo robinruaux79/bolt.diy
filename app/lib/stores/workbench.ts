@@ -35,8 +35,8 @@ export type WorkbenchViewType = 'code' | 'preview';
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
-  #filesStore = new FilesStore(webcontainer);
-  #editorStore = new EditorStore(this.#filesStore);
+  filesStore = new FilesStore(webcontainer);
+  #editorStore = new EditorStore(this.filesStore);
   #terminalStore = new TerminalStore(webcontainer);
 
   #reloadedMessages = new Set<string>();
@@ -70,7 +70,7 @@ export class WorkbenchStore {
   }
 
   get files() {
-    return this.#filesStore.files;
+    return this.filesStore.files;
   }
 
   get currentDocument(): ReadableAtom<EditorDocument | undefined> {
@@ -86,7 +86,7 @@ export class WorkbenchStore {
   }
 
   get filesCount(): number {
-    return this.#filesStore.filesCount;
+    return this.filesStore.filesCount;
   }
 
   get showTerminal() {
@@ -120,7 +120,7 @@ export class WorkbenchStore {
   setDocuments(files: FileMap) {
     this.#editorStore.setDocuments(files);
 
-    if (this.#filesStore.filesCount > 0 && this.currentDocument.get() === undefined) {
+    if (this.filesStore.filesCount > 0 && this.currentDocument.get() === undefined) {
       // we find the first file and select it
       for (const [filePath, dirent] of Object.entries(files)) {
         if (dirent?.type === 'file') {
@@ -142,7 +142,7 @@ export class WorkbenchStore {
       return;
     }
 
-    const originalContent = this.#filesStore.getFile(filePath)?.content;
+    const originalContent = this.filesStore.getFile(filePath)?.content;
     const unsavedChanges = originalContent !== undefined && originalContent !== newContent;
 
     this.#editorStore.updateFile(filePath, newContent);
@@ -192,7 +192,7 @@ export class WorkbenchStore {
       return;
     }
 
-    await this.#filesStore.saveFile(filePath, document.value);
+    await this.filesStore.saveFile(filePath, document.value);
 
     const newUnsavedFiles = new Set(this.unsavedFiles.get());
     newUnsavedFiles.delete(filePath);
@@ -218,7 +218,7 @@ export class WorkbenchStore {
     }
 
     const { filePath } = currentDocument;
-    const file = this.#filesStore.getFile(filePath);
+    const file = this.filesStore.getFile(filePath);
 
     if (!file) {
       return;
@@ -233,12 +233,12 @@ export class WorkbenchStore {
     }
   }
 
-  getFileModifcations() {
-    return this.#filesStore.getFileModifications();
+  getFileModifications() {
+    return this.filesStore.getFileModifications();
   }
 
   resetAllFileModifications() {
-    this.#filesStore.resetFileModifications();
+    this.filesStore.resetFileModifications();
   }
 
   abortAllActions() {

@@ -4,6 +4,9 @@ import { classNames } from '~/utils/classNames';
 import { createScopedLogger } from '~/utils/logger';
 
 import styles from './CodeBlock.module.scss';
+import { useStore } from '@nanostores/react';
+import { workbenchStore } from '~/lib/stores/workbench';
+import { FilesStore } from '~/lib/stores/files';
 
 const logger = createScopedLogger('CodeBlock');
 
@@ -19,6 +22,23 @@ export const CodeBlock = memo(
   ({ className, code, language = 'plaintext', theme = 'dark-plus', disableCopy = false }: CodeBlockProps) => {
     const [html, setHTML] = useState<string | undefined>(undefined);
     const [copied, setCopied] = useState(false);
+    const files = useStore(workbenchStore.files);
+
+    const [filepath, setFilepath] = useState("");
+    const [isInputEnabled, setInputEnabled] = useState(false);
+
+    const handleInsert = async () => {
+        if( !isInputEnabled ){
+          setInputEnabled(true);
+        }else{
+          if( filepath ) {
+            await workbenchStore.filesStore.saveFile(filepath, code);
+            workbenchStore.showWorkbench.set(true);
+          }
+          setInputEnabled(false);
+        }
+    };
+
 
     const copyToClipboard = () => {
       if (copied) {
@@ -74,6 +94,25 @@ export const CodeBlock = memo(
               <div className="i-ph:clipboard-text-duotone"></div>
             </button>
           )}
+          {isInputEnabled && (
+            <div className={classNames(styles.field)}>
+              <input type={"text"} placeholder="filename.ext" name={"inputFilepath"} value={filepath} onChange={e => setFilepath(e.target.value)} />
+            </div>
+          )}
+          <button
+            className={classNames(
+              'flex items-center bg-accent-500 p-[6px] justify-center before:bg-white before:rounded-l-md before:text-gray-500 before:border-r before:border-gray-300 rounded-md transition-theme',
+              {
+                'before:opacity-0': true,
+                'before:opacity-100': false,
+              },
+            )}
+            title="Create file"
+            onClick={handleInsert}
+          >
+            {isInputEnabled && <div className="i-ph:check-duotone"></div>}
+            {!isInputEnabled && <div className="i-ph:file-arrow-up-thin"></div>}
+          </button>
         </div>
         <div dangerouslySetInnerHTML={{ __html: html ?? '' }}></div>
       </div>
