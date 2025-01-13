@@ -25,7 +25,9 @@ Si tu as besoin d’un fichier pour analyser la suite à faire, demande-le moi �
 Je te renverrai alors tous les éléments que tu m’auras demandé, les uns à la suite des autres au format JSON :  { file: “relativePath/filename.ext”, cmd: “GET_FILE”, content: “lecontenudufichier” } . Cela nous permettra également d’automatiser le processus pour t’utiliser comme service.
 
 Renvoie uniquement du JSON contenant tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier README.md' }
-Le JSON ne doit pas utiliser les string literals mais les guillemets.`;
+Le JSON ne doit pas utiliser les string literals mais les guillemets.
+Renvoie tes commandes en JSON formatté.
+`;
 
 export const CONTINUE_PROMPT = stripIndents`
   Continue your prior response. IMPORTANT: Immediately begin from where you left off without any interruptions.

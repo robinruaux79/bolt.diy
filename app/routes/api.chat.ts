@@ -136,6 +136,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
     stream.switchSource(result.toDataStream());
 
+    console.log("ok boy !!")
     return new Response(stream.readable, {
       status: 200,
       headers: {

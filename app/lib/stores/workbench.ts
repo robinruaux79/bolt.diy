@@ -200,6 +200,13 @@ export class WorkbenchStore {
     this.unsavedFiles.set(newUnsavedFiles);
   }
 
+  removeFromUnsaved(filePath: string) {
+    const newUnsavedFiles = new Set(this.unsavedFiles.get());
+    newUnsavedFiles.delete(filePath);
+
+    this.unsavedFiles.set(newUnsavedFiles);
+  }
+
   async saveCurrentDocument() {
     const currentDocument = this.currentDocument.get();
 

@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';

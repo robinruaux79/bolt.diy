@@ -7,6 +7,7 @@ import styles from './CodeBlock.module.scss';
 import { useStore } from '@nanostores/react';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { FilesStore } from '~/lib/stores/files';
+import { Markdown } from '~/components/chat/Markdown';
 
 const logger = createScopedLogger('CodeBlock');
 
@@ -70,8 +71,10 @@ export const CodeBlock = memo(
         try { js = JSON.parse(code);} catch (e) { }
         setJson(js);
         console.log(js)
-        if( js?.cmd === "EDIT_FILE" ) {
-          if( js.new_content){
+        if( js?.cmd === "ANALYSIS" ) {
+          setJsonHtml(js.content);
+        }else  if( js?.cmd === "EDIT_FILE" ) {
+          if( js.new_content !== undefined){
             if( js.lineToEdit ){
               const file = workbenchStore.filesStore.getFile(js.file);
               if( file ){
@@ -129,8 +132,9 @@ export const CodeBlock = memo(
 
     if( json?.cmd ){
       return <div className={classNames('relative group text-left', className)}>
-        {json.cmd === "ANALYSIS" && <>{json.content}</>}
-        {json.cmd === "EDIT_FILE" && json.new_content && <><b><pre>{json.file}</pre></b>
+        {json.cmd === 'ANALYSIS' && <Markdown>{json.content}</Markdown>}
+        {json.cmd === 'EDIT_FILE' && json.new_content && <><b>
+          <pre>{json.file}</pre></b>
           <div dangerouslySetInnerHTML={{ __html: jsonHtml ?? '' }}></div>
         </>}
         {json.cmd === "EDIT_FILE" && !json.new_content && <><b><pre>{json.file} {json.line && <>(line: {json.line})</>}</pre></b>
