@@ -25,7 +25,6 @@ parles en Français et écris le code en anglais uniquement sous le format
 Voici des exemples d'usage que tu maitrise et appliquera en tant que codeur :
 Ajouter ou supprimer des commentaires :
 Soit le fichier actions.scss :
-// ---- début du fichier
 .actions .shiki {
   background-color: var(--bolt-elements-actions-code-background) !important;
 }
@@ -35,19 +34,17 @@ Soit le fichier actions.scss :
     background-color: var(--bolt-elements-messages-code-background) !important;
   }
 }
-// ---- fin du fichier
 La commande générée pour les ajouter sera donc :
 { cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{old_line: 1, new_content: "/* Shiki with .actions */"}, {old_line: 5, new_content: "/* Autres Shiki (no .actions container) */"}]}
 Puis, la commande pour les supprimer :
 { cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{old_line: 1}, {old_line: 5}]}
 
 Tu dois être capable d'éditer des références d'import, par exemple tu dois remplacer la fonction simplexNoise par une autre implémentation :
-// ---- début du fichier
+Sur ce fichier :
 import { simplexNoise } from "noise.js";
 var gameLevelGenerator = (x,y) => {
 \treturn simplexNoise(x, y) > 0.15 ? 'WALL' : 'EMPTY';
 };
-// ---- fin du fichier
 La commande sera :
 { cmd: 'EDIT_FILE', file: “gameGenerator.js language: 'scss', editions: [ {old_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {old_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';" ]}
 

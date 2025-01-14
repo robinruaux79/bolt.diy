@@ -75,38 +75,37 @@ export const CodeBlock = memo(
           setJsonHtml(js.content);
         }else if( js?.cmd === "CREATE_FILE" ) {
           setJsonHtml(await codeToHtml(js.content, { lang: js.language || language, theme }));
+
           await workbenchStore.filesStore.saveFile(js.file, js.content);
           workbenchStore.removeFromUnsaved(js.file);
           workbenchStore.showWorkbench.set(true);
+
         }else  if( js?.cmd === "EDIT_FILE" ) {
           let html = "";
+          const file = workbenchStore.filesStore.getFile(js.file);
+          const lines = file?.content?.split("\n") || [];
+          console.log("line", js.file, file, lines);
+          let fileContent = '';
           js.editions?.forEach(ev => {
-            html = (js.old_line ? js.old_line + ":" : "") + "<div style='color:red'>-" +ev.old_content + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
-          });
-          setJsonHtml(html);
-          if( js.new_content !== undefined) {
+            let txt = '';
+            if( !ev.old_content && ev.old_line ){
+              txt = lines[ev.old_line-1];
+              lines.splice(ev.old_line-1, 1);
+            }else{
 
-            /*if (js.lineToEdit) {
-              const file = workbenchStore.filesStore.getFile(js.file);
-              if (file) {
-                let lines = file.content.split("\n");
-                lines.splice(js.lineToEdit, 0, js.new_content);
-                await workbenchStore.filesStore.saveFile(js.file, lines.join("\n"));
-              } else {
-                await workbenchStore.filesStore.saveFile(js.file, js.new_content);
-              }
-            } else */{
-              await workbenchStore.filesStore.saveFile(js.file, js.new_content);
             }
-            workbenchStore.removeFromUnsaved(js.file);
-            workbenchStore.showWorkbench.set(true);
-            setJsonHtml(await codeToHtml(js.new_content, { lang: js.language || language, theme }));
-          }
+            html = html + (ev.old_line ? ev.old_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
+          })
+          setJsonHtml(html);
+          console.log(lines.join("\n"), js.file);/*
+          await workbenchStore.filesStore.saveFile(js.file, [...lines].join("\n"));
+          workbenchStore.removeFromUnsaved(js.file);
+          workbenchStore.showWorkbench.set(true);*/
         }
         setHTML(await codeToHtml(code, { lang: language, theme }));
       };
 
-      processCode();
+        processCode();
     }, [code]);
 
     if( json?.cmd ){
