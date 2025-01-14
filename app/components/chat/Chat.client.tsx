@@ -137,6 +137,12 @@ export const ChatImpl = memo(
 
     const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
 
+    const handleActions = (actions = []) => {
+      actions.forEach((action) => {
+
+      });
+    };
+
     const { messages, isLoading, input, handleInputChange, setInput, stop, append, setMessages, reload } = useChat({
       api: '/api/chat',
       body: {
@@ -152,7 +158,7 @@ export const ChatImpl = memo(
           'There was an error processing your request: ' + (error.message ? error.message : 'No details were returned'),
         );
       },
-      onFinish: (message, response) => {
+      onFinish: async (message, response) => {
         const usage = response.usage;
 
         if (usage) {
@@ -162,13 +168,22 @@ export const ChatImpl = memo(
         }
 
         // handle markdown JSON commands and returns the actions traces
-        /*fetch('/api/actions', {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: 'POST',
-          body: JSON.stringify({message})
-        })*/
+        try {
+          const res = await fetch('/api/actions', {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: 'POST',
+            body: JSON.stringify({message})
+          });
+          if( res.ok ){
+            const json = await res.json();
+            handleActions(json.actions);
+          }
+        } catch (e){
+
+        }
+
 
         logger.debug('Finished streaming');
       },

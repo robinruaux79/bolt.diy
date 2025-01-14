@@ -118,7 +118,7 @@ export function useChatHistory() {
 
       try {
         const newId = await duplicateChat(db, mixedId || listItemId);
-        navigate(`/chat/${newId}`);
+        navigate(`/thread/${newId}`);
         toast.success('Chat duplicated successfully');
       } catch (error) {
         toast.error('Failed to duplicate chat');
@@ -132,7 +132,7 @@ export function useChatHistory() {
 
       try {
         const newId = await createChatFromMessages(db, description, messages);
-        window.location.href = `/chat/${newId}`;
+        window.location.href = `/thread/${newId}`;
         toast.success('Chat imported successfully');
       } catch (error) {
         if (error instanceof Error) {
@@ -174,7 +174,7 @@ function navigateChat(nextId: string) {
    * `navigate(`/chat/${nextId}`, { replace: true });`
    */
   const url = new URL(window.location.href);
-  url.pathname = `/chat/${nextId}`;
+  url.pathname = `/thread/${nextId}`;
 
   window.history.replaceState({}, '', url);
 }

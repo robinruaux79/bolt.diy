@@ -53,7 +53,7 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
       {editing ? (
         renderDescriptionForm
       ) : (
-        <a href={`/chat/${item.urlId}`} className="flex w-full relative truncate block">
+        <a href={`/thread/${item.urlId}`} className="flex w-full relative truncate block">
           {currentDescription}
           <div
             className={classNames(
@@ -63,7 +63,7 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
           >
             <div className="flex items-center p-1 text-bolt-elements-textSecondary opacity-0 group-hover:opacity-100 transition-opacity">
               <ChatActionButton
-                toolTipContent="Export chat"
+                toolTipContent="Export thread"
                 icon="i-ph:download-simple"
                 onClick={(event) => {
                   event.preventDefault();
@@ -72,13 +72,13 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
               />
               {onDuplicate && (
                 <ChatActionButton
-                  toolTipContent="Duplicate chat"
+                  toolTipContent="Duplicate thread"
                   icon="i-ph:copy"
                   onClick={() => onDuplicate?.(item.id)}
                 />
               )}
               <ChatActionButton
-                toolTipContent="Rename chat"
+                toolTipContent="Rename thread"
                 icon="i-ph:pencil-fill"
                 onClick={(event) => {
                   event.preventDefault();
@@ -87,7 +87,7 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
               />
               <Dialog.Trigger asChild>
                 <ChatActionButton
-                  toolTipContent="Delete chat"
+                  toolTipContent="Delete thread"
                   icon="i-ph:trash"
                   className="[&&]:hover:text-bolt-elements-button-danger-text"
                   onClick={(event) => {
