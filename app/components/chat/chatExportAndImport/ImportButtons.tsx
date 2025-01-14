@@ -29,25 +29,25 @@ export function ImportButtons(importChat: ((description: string, messages: Messa
 
                   // Standard format
                   if (Array.isArray(data.messages)) {
-                    await importChat(data.description || 'Imported Chat', data.messages);
-                    toast.success('Chat imported successfully');
+                    await importChat(data.description || 'Imported Thread', data.messages);
+                    toast.success('Thread imported successfully');
 
                     return;
                   }
 
-                  toast.error('Invalid chat file format');
+                  toast.error('Invalid thread file format');
                 } catch (error: unknown) {
                   if (error instanceof Error) {
-                    toast.error('Failed to parse chat file: ' + error.message);
+                    toast.error('Failed to parse thread file: ' + error.message);
                   } else {
-                    toast.error('Failed to parse chat file');
+                    toast.error('Failed to parse thread file');
                   }
                 }
               };
-              reader.onerror = () => toast.error('Failed to read chat file');
+              reader.onerror = () => toast.error('Failed to read thread file');
               reader.readAsText(file);
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : 'Failed to import chat');
+              toast.error(error instanceof Error ? error.message : 'Failed to import thread');
             }
             e.target.value = ''; // Reset file input
           } else {
@@ -65,7 +65,7 @@ export function ImportButtons(importChat: ((description: string, messages: Messa
             className="px-4 py-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary hover:bg-bolt-elements-background-depth-3 transition-all flex items-center gap-2"
           >
             <div className="i-ph:upload-simple" />
-            Import Chat
+            Import Thread
           </button>
           <ImportFolderButton
             importChat={importChat}

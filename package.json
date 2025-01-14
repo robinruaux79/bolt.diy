@@ -1,11 +1,11 @@
 {
-  "name": "bolt",
-  "description": "An AI Agent",
+  "name": "bolted",
+  "description": "An agent system here to help coding with AI",
   "private": true,
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "deploy": "npm run build && wrangler pages deploy",
     "build": "remix vite:build",

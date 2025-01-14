@@ -322,13 +322,13 @@ export default function DataTab() {
                   onClick={handleExportAllChats}
                   className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
                 >
-                  Export All Chats
+                  Export All Threads
                 </button>
                 <button
                   onClick={handleImportChats}
                   className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
                 >
-                  Import Chats
+                  Import Threads
                 </button>
                 <button
                   onClick={handleDeleteAllChats}
@@ -338,7 +338,7 @@ export default function DataTab() {
                     isDeleting ? 'opacity-50 cursor-not-allowed' : '',
                   )}
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete All Chats'}
+                  {isDeleting ? 'Deleting...' : 'Delete All Threads'}
                 </button>
               </div>
             </div>

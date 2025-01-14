@@ -13,6 +13,11 @@ body {
   width: 100%;
 }
 
+body {
+  background: rgb(0,1,3);
+  background: linear-gradient(0deg, rgba(0,1,3,1) 66%, rgba(79,98,103,1) 100%);
+}
+
 :root {
   --gradient-opacity: 0.8;
   --primary-color: rgba(158, 117, 240, var(--gradient-opacity));
