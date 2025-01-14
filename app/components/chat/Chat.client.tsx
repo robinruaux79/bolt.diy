@@ -161,6 +161,15 @@ export const ChatImpl = memo(
           // You can now use the usage data as needed
         }
 
+        // handle markdown JSON commands and returns the actions traces
+        /*fetch('/api/actions', {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: 'POST',
+          body: JSON.stringify({message})
+        })*/
+
         logger.debug('Finished streaming');
       },
       initialMessages,
@@ -309,6 +318,8 @@ export const ChatImpl = memo(
 
           if (temResp) {
             const { assistantMessage, userMessage } = temResp;
+
+            console.log(assistantMessage);
 
             setMessages([
               {

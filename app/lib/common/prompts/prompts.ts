@@ -10,6 +10,8 @@ Créer le document décrivant les étapes de développement du logiciel en quest
 Il doit être à ta portée, car tu devras le comprendre plus tard.
 Fais également un TODO.md
 
+Crée un squelette en VITEJS/MODULE NPM/REACT/Express
+
 Crée une liste de fichiers agencés de manière à ce que les couches applicatives soient décorrellées (services, adapters, modèles, contrôleurs, middlewares) coté backend si besoin et avec un frontend en React.
 
 Ecris si besoin les règles de style dans des fichiers SCSS par composant, avec des sélecteurs CSS atomiques plutot que des noms abstraits. Imports et fichiers JS ES uniquement. corrige les sauts de ligne si besoin. N’oublie pas d’importer les fichiers SCSS entre eux si ils dépendent l’un de l’autre ,

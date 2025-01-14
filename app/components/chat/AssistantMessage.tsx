@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Markdown } from './Markdown';
 import type { JSONValue } from 'ai';
 
@@ -25,6 +25,7 @@ export const AssistantMessage = memo(({ content, annotations }: AssistantMessage
           Tokens: {usage.totalTokens} (prompt: {usage.promptTokens}, completion: {usage.completionTokens})
         </div>
       )}
+
       <Markdown html>{content}</Markdown>
     </div>
   );
