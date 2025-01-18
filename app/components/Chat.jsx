@@ -47,19 +47,22 @@ export const Chat = () => {
             setFiles(fs => [...fs, { file: a.file, content: a.content }]);
             console.log("CREATED FILE " + a.file);
           }else if( a.cmd === 'EDIT_FILE'){
-            const lines = files.find(f=>f.file === a.file)?.split("\n");
+            const lines = files.find(f=>f.file === a.file)?.content.split("\n");
             if( lines ){
+              let ind = 0;
               a.editions?.forEach(ev => {
                 let txt = '';
-                const old_line = parseInt(ev.old_line, 10);
-                if( !ev.old_content && old_line && lines ){
-                  txt = lines[old_line-1-ind];
-                  lines.splice(old_line-1, 1);
+                const start_line = parseInt(ev.start_line, 10);
+                if( !ev.old_content && start_line && lines ){
+                  lines.splice(start_line-1-ind, 1);
                   ind++;
                 }
                 if (ev.new_content){
-                  lines.splice(old_line-1, 0, ev.new_content);
+                  lines.splice(start_line-1-ind, 0, ev.new_content);
                   ind--;
+                }
+                if(ev.insert_content){
+                  lines[start_line-1-ind] = ev.insert_content;
                 }
               })
               setFiles(files => {
@@ -70,7 +73,6 @@ export const Chat = () => {
                   return f;
                 });
               })
-              console.log(lines.join('\n'));
             }
 //            files[a.file] = lines.join('\n');
           }
@@ -106,6 +108,10 @@ export const Chat = () => {
         id: `${new Date().getTime()}`,
         role: 'user',
         content: prompt,
+      }, {
+        id:`${new Date().getTime()}-act`,
+        role: 'system',
+        content: "Met à jour le fichier TODO.md après ta liste d'actions."
       }]);
     reload();
     setPrompt('');
@@ -123,24 +129,28 @@ export const Chat = () => {
     <div className="chat-messages">
       {messages.map(message => {
         let json;
+        if( message.role === "system")
+          return <></>;
+
         if (message.role === 'assistant') {
-          console.log("msg",message.content.matchAll(REGEXP_CODE))
           try {
             json = JSON.parse(message.content);
+            console.log("JSON parsed", json)
           } catch (e) {
 
+            console.log("JSON parsed", message.content)
           }
         }
         /*
           js.editions?.forEach(ev => {
             let txt = '';
-            if( !ev.old_content && ev.old_line ){
-              txt = lines[ev.old_line-1];
-              lines.splice(ev.old_line-1, 1);
+            if( !ev.old_content && ev.start_line ){
+              txt = lines[ev.start_line-1];
+              lines.splice(ev.start_line-1, 1);
             }else{
 
             }
-            html = html + (ev.old_line ? ev.old_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
+            html = html + (ev.start_line ? ev.start_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
           })
           setJsonHtml(html);
           console.log(lines.join("\n"), js.file);
@@ -156,25 +166,31 @@ export const Chat = () => {
             let html = action.content;
             if( action.cmd === 'EDIT_FILE' ){
               const lines = files.find(f => f.file === action.file)?.content?.split("\n") || [];
-
               html = '';
             let ind = 0;
               action.editions?.forEach(ev => {
                 let txt = '';
-                const old_line = parseInt(ev.old_line, 10);
-                if( !ev.old_content && old_line && lines ){
-                  txt = lines[old_line-1-ind];
-                  lines.splice(old_line-1, 1);
-                  ind++;
-                }
-                if (ev.new_content){
-                  lines.splice(old_line-1, 0, ev.new_content);
+                const start_line = parseInt(ev.start_line, 10);
+                if( start_line && lines ){
+                  txt = lines[start_line-1-ind];
+                  lines.splice(start_line-1, 1);
+                }else if (ev.insert_content){
+                  lines.splice(start_line-1, 0, ev.insert_content);
+                  ind--;
+                }else if (ev.new_content){
+                  lines.splice(start_line-1, 0, ev.new_content);
                   ind--;
                 }
-                if( ev.new_content )
-                  html += "+l"+old_line + " : " + ev.new_content+"\n";
+
+                 if( ev.insert_content !== undefined ) {
+                  html += "+l" + start_line + " : " + ev.insert_content + "\n";
+                }
+                else if( ev.new_content ) {
+                   html += "-l" + start_line + " : " + lines[start_line - 1] + "\n";
+                   html += "+l" + start_line + " : " + ev.new_content + "\n";
+                 }
                 else
-                  html += "-l"+old_line + " : " +(txt || ev.old_content)+"\n";
+                  html += "-l"+start_line + " : " + txt+"\n";
 
               })
             }
