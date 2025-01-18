@@ -1,15 +1,18 @@
-.chat-prompt {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  textarea {
-    box-sizing: border-box;
-    background-color: white;
-    border: 1px solid gray;
-    color: black;
-    font-size: 110%;
-    padding: 8px;
-    line-height: 100%;
+.chat {
+  position: relative;
+  .chat-prompt {
     width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    textarea {
+      box-sizing: border-box;
+      background-color: white;
+      border: 1px solid gray;
+      color: black;
+      font-size: 110%;
+      padding: 8px;
+      line-height: 100%;
+      width: 100%;
+    }
   }
 }

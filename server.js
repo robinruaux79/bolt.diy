@@ -28,9 +28,8 @@ Parles en Français et écris le code en anglais.
 
 Exemples de commandes :
 { cmd: 'CREATE_FILE', file: “relativePath/filename.ext”, language: 'plaintext', content: "import React from 'react';"} // crée un fichier
-{ cmd: 'EDIT_FILE', file: “relativePath/filename.ext”, language: 'plaintext', editions: [{old_line: 1, old_content: "/* old_content n'est indiqué que si on vient remplacer la ligne. Si on veut juste l'insérer, ne pas ajouter old_content */"}, {old_line: 1, old_content: "/* Commentaire n°2 */"}]}
 
-Voici des exemples d'usage que tu maitrise et appliquera en tant que codeur :
+Voici des exemples d'usage que tu maitrisera et appliquera en tant que codeur :
 Ajouter ou supprimer des commentaires :
 Soit le fichier actions.scss :
 .actions .shiki {
@@ -43,9 +42,10 @@ Soit le fichier actions.scss :
   }
 }
 La commande générée pour les ajouter sera donc :
-{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{old_line: 1, new_content: "/* Shiki with .actions */"}, {old_line: 5, new_content: "/* Autres Shiki (no .actions container) */"}]}
+{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{old_line: 1, new_content: "/* Shiki with .actions */\n.actions .shiki {"}, {old_line: 5, new_content: "/* Autres Shiki (no .actions container) */\n.shiki {"}]}
 Puis, la commande pour les supprimer :
 { cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{old_line: 1}, {old_line: 5}]}
+
 
 Tu dois être capable d'éditer des références d'import, par exemple tu dois remplacer la fonction simplexNoise par une autre implémentation :
 Sur ce fichier :
@@ -74,14 +74,10 @@ Renvoie une liste des commandes que tu souhaites utiliser au format JSON
 
 Tu dois connaitre les fichiers disponibles, et si tu as besoin de la structure du dossier, tu peux lancer 'ls -la'
 
-Le JSON ne doit pas utiliser les string literals mais les guillemets, doit être sur une ligne, et sans formattage ni commentaire.
+Le JSON ne doit pas utiliser les string literals mais les guillemets, doit être sur une seule ligne, et sans commentaire.
 
 tel quel :
-{ actions : [
-  { cmd: 'ANALYSIS', 'J\'ai étudié votre projet. Voici la todolist...' },
-  { cmd: 'CREATE_FILE', content: '## TODOLIST\n\n- [ ] Créer le squelette applicatif'\n- [ ] Créer le système de rendu' }
- ] }
-`;
+{ actions : [ { cmd: 'ANALYSIS', 'J\'ai étudié votre projet. Voici la todolist...' }, { cmd: 'CREATE_FILE', content: '## TODOLIST\n\n- [ ] Créer le squelette applicatif'\n- [ ] Créer le système de rendu' } ] }`;
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
