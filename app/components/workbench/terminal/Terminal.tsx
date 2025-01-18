@@ -2,7 +2,6 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
-import type { Theme } from '~/lib/stores/theme';
 import { createScopedLogger } from '~/utils/logger';
 import { getTerminalTheme } from './theme';
 
@@ -14,7 +13,6 @@ export interface TerminalRef {
 
 export interface TerminalProps {
   className?: string;
-  theme: Theme;
   readonly?: boolean;
   id: string;
   onTerminalReady?: (terminal: XTerm) => void;
@@ -23,7 +21,7 @@ export interface TerminalProps {
 
 export const Terminal = memo(
   forwardRef<TerminalRef, TerminalProps>(
-    ({ className, theme, readonly, id, onTerminalReady, onTerminalResize }, ref) => {
+    ({ className, readonly, id, onTerminalReady, onTerminalResize }, ref) => {
       const terminalElementRef = useRef<HTMLDivElement>(null);
       const terminalRef = useRef<XTerm>();
 

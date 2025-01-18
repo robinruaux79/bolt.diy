@@ -158,7 +158,6 @@ export const TerminalTabs = memo(() => {
                   }}
                   onTerminalReady={(terminal) => workbenchStore.attachBoltTerminal(terminal)}
                   onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
                 />
               );
             } else {
@@ -174,7 +173,6 @@ export const TerminalTabs = memo(() => {
                   }}
                   onTerminalReady={(terminal) => workbenchStore.attachTerminal(terminal)}
                   onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
                 />
               );
             }

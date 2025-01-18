@@ -28,7 +28,7 @@ export function Header() {
         <>
           <ClientOnly>
             {() => (
-              <div className="mr-1">
+              <div className="header-actions">
                 <HeaderActionButtons />
               </div>
             )}

@@ -9,9 +9,7 @@ import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { cssTransition, toast, ToastContainer } from 'react-toastify';
 import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { description, useChatHistory } from '~/lib/persistence';
-import { chatStore } from '~/lib/stores/chat';
-import { workbenchStore } from '~/lib/stores/workbench';
+
 import { DEFAULT_MODEL, DEFAULT_PROVIDER, PROMPT_COOKIE_KEY, PROVIDER_LIST } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger, renderLogger } from '~/utils/logger';
@@ -19,8 +17,8 @@ import { BaseChat } from './BaseChat';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
 import { useSettings } from '~/lib/hooks/useSettings';
-import type { ProviderInfo } from '~/types/model';
-import { useSearchParams } from '@remix-run/react';
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+
 import { createSampler } from '~/utils/sampler';
 import { getTemplates, selectStarterTemplate } from '~/utils/selectStarterTemplate';
 
@@ -34,11 +32,6 @@ const logger = createScopedLogger('Chat');
 export function Chat() {
   renderLogger.trace('Chat');
 
-  const { ready, initialMessages, storeMessageHistory, importChat, exportChat } = useChatHistory();
-  const title = useStore(description);
-  useEffect(() => {
-    workbenchStore.setReloadedMessages(initialMessages.map((m) => m.id));
-  }, [initialMessages]);
 
   return (
     <>
@@ -46,9 +39,6 @@ export function Chat() {
         <ChatImpl
           description={title}
           initialMessages={initialMessages}
-          exportChat={exportChat}
-          storeMessageHistory={storeMessageHistory}
-          importChat={importChat}
         />
       )}
       <ToastContainer
