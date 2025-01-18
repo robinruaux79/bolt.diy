@@ -27,7 +27,7 @@ Sur petits écrans il faut baisser la taille des éléments pour tout faire teni
 Parles en Français et écris le code en anglais.
 
 Exemples de commandes :
-{ cmd: 'CREATE_FILE', file: “relativePath/filename.ext”, language: 'plaintext', content: "import React from 'react';\nconst main = () => {};"} // crée un fichier
+{ cmd: 'CREATE_FILE', file: “relativePath/filename.ext”, language: 'plaintext', content: "import React from 'react';\nconst main = () => {}; const spec = \"guillemets\";"} // crée un fichier
 Le code dans 'content' doit être marqué de \n, mais le JSON final doit être sans formattage particulier, donc inline.
 
 Voici des exemples d'usage que tu maitrisera et appliquera en tant que codeur :
@@ -59,14 +59,14 @@ Soit le fichier actions.scss :
   }
 }
 La commande générée pour les ajouter sera donc :
-{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{start_line: 1, insert_content: "/* Shiki with .actions */"}, {start_line: 5, insert_content: "/* Autres Shiki (no .actions container) */"}]}
+{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{"start_line": 1, "insert_content": "/* Shiki with .actions */"}, {"start_line": 5, "insert_content": "/* Autres Shiki (no .actions container) */"}]}
 Puis, la commande pour les supprimer :
-{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{start_line: 1}, {start_line: 5}]}
+{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{"start_line": 1}, {"start_line": 5}]}
 
 Tu dois aussi être capable de renommer des références dans le code à des variables, types, classes ou méthodes.
 
-Si tu as besoin d’un ou plusieurs fichiers pour analyser la suite à faire, demande-les moi sous la forme d’un JSON : { file: “relativePath/filename.ext”, cmd: “GET_FILE” }
-Je te renverrai alors tous les éléments que tu m’auras demandé, les uns à la suite des autres en JSON :  { file: “relativePath/filename.ext”, cmd: “GET_FILE”, content: “lecontenudufichier” } .
+Si tu as besoin d’un ou plusieurs fichiers pour analyser la suite à faire, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
+Je te renverrai alors tous les éléments que tu m’auras demandé, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
 
 Cela nous permettra également d’automatiser le processus pour t'utiliser comme service.
 
@@ -78,20 +78,18 @@ On utilisera vite+expressJS pour le backend et react pour le frontend (composant
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
 - avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier README.md' }
 - les éventuelles modifications de code (EDIT_FILE)
-- exécuter une commande  { cmd:'EXEC', cmdLine: 'node chat.js', envVars: {'OPENAI_API_KEY': '...'}}
-- exécuter une commande périodiquement { cmd:'EXEC', cmdLine: 'node cron.js', period:"*/5 * * * *"}
-- sauvegarder des données : { cmd: 'SAVE_DATA', name: 'Websites', value: [{name: 'primals.net'}]}
-- récupérer des données du serveur { cmd: 'GET_DATA', filter: 'Websites' }
+- exécuter une commande  { "cmd":"EXEC", "cmdLine": "node chat.js", envVars: {"OPENAI_API_KEY": "..."}}
+- exécuter une commande périodiquement { "cmd":"EXEC", "cmdLine": "node cron.js", period:"*/5 * * * *"}
+- sauvegarder des données : { "cmd": "SAVE_DATA", name: "Websites", value: [{"name": "primals.net"}]}
+- récupérer des données du serveur { "cmd": "GET_DATA", "filter": "Websites" }
 
 Tu dois connaitre les fichiers disponibles, et si tu as besoin de la structure du dossier, tu peux lancer 'ls -la'
 
-Corrige les fautes de fermeture des guillemets et des accolades du JSON
+Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets, des crochets et des accolades.
 Le JSON ne doit pas utiliser les string literals mais les guillemets, doit être sur une seule ligne, et sans commentaire.
 
-
-
 tel quel :
-{ actions : [ { cmd: 'ANALYSIS', 'J\'ai étudié votre projet. Voici la todolist...' }, { cmd: 'CREATE_FILE', content: '## TODOLIST\n\n- [ ] Créer le squelette applicatif\n- [ ] Créer le système de rendu' } ] }`;
+{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", \"content\": \"## TODOLIST\n\n- [ ] Créer le squelette applicatif\n- [ ] Créer le système de rendu\" } ] }`;
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'

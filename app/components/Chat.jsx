@@ -1,7 +1,7 @@
 import { useChat } from 'ai/react';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import "./Chat.scss"
 import Button from './Button.jsx';
@@ -101,17 +101,12 @@ export const Chat = () => {
 
   const [prompt, setPrompt] = useState();
 
-  console.log(messages)
   const handleNewMessage = () => {
     setMessages([...messages,
       {
         id: `${new Date().getTime()}`,
         role: 'user',
-        content: prompt,
-      }, {
-        id:`${new Date().getTime()}-act`,
-        role: 'system',
-        content: "Met à jour le fichier TODO.md après ta liste d'actions."
+        content: prompt ? prompt : 'La suite, s\'il te plait. Met à jour le fichier TODO.md.',
       }]);
     reload();
     setPrompt('');
@@ -124,114 +119,117 @@ export const Chat = () => {
   }, [messages])
 
 
-  return <div className="chat">
+  const memMessages = useMemo(() => {
+    return messages.map(message => {
+      let json;
+      if( message.role === "system")
+        return <></>;
 
-    <div className="chat-messages">
-      {messages.map(message => {
-        let json;
-        if( message.role === "system")
-          return <></>;
+      if (message.role === 'assistant') {
+        try {
+          json = JSON.parse(message.content);
+          console.log("JSON parsed", json)
+        } catch (e) {
 
-        if (message.role === 'assistant') {
-          try {
-            json = JSON.parse(message.content);
-            console.log("JSON parsed", json)
-          } catch (e) {
+          console.log("JSON parsed", message.content)
+        }
+      }
+      /*
+        js.editions?.forEach(ev => {
+          let txt = '';
+          if( !ev.old_content && ev.start_line ){
+            txt = lines[ev.start_line-1];
+            lines.splice(ev.start_line-1, 1);
+          }else{
 
-            console.log("JSON parsed", message.content)
           }
-        }
-        /*
-          js.editions?.forEach(ev => {
-            let txt = '';
-            if( !ev.old_content && ev.start_line ){
-              txt = lines[ev.start_line-1];
-              lines.splice(ev.start_line-1, 1);
-            }else{
-
-            }
-            html = html + (ev.start_line ? ev.start_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
-          })
-          setJsonHtml(html);
-          console.log(lines.join("\n"), js.file);
-          await workbenchStore.filesStore.saveFile(js.file, [...lines].join("\n"));
-          workbenchStore.removeFromUnsaved(js.file);
-          workbenchStore.showWorkbench.set(true);
-        setHTML(await codeToHtml(code, { lang: language, theme }));*/
-        if( json && !json.actions ) {
-          json = {actions: [json]};
-        }
-        if (Array.isArray(json?.actions)) {
-          return json?.actions.map(action => {
-            let html = action.content;
-            if( action.cmd === 'EDIT_FILE' ){
-              const lines = files.find(f => f.file === action.file)?.content?.split("\n") || [];
-              html = '';
+          html = html + (ev.start_line ? ev.start_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
+        })
+        setJsonHtml(html);
+        console.log(lines.join("\n"), js.file);
+        await workbenchStore.filesStore.saveFile(js.file, [...lines].join("\n"));
+        workbenchStore.removeFromUnsaved(js.file);
+        workbenchStore.showWorkbench.set(true);
+      setHTML(await codeToHtml(code, { lang: language, theme }));*/
+      if( json && !json.actions ) {
+        json = {actions: [json]};
+      }
+      if (Array.isArray(json?.actions)) {
+        return json?.actions.map(action => {
+          let html = action.content;
+          if( action.cmd === 'EDIT_FILE' ){
+            const lines = files.find(f => f.file === action.file)?.content?.split("\n") || [];
+            html = '';
             let ind = 0;
-              action.editions?.forEach(ev => {
-                let txt = '';
-                const start_line = parseInt(ev.start_line, 10);
-                if( start_line && lines ){
-                  txt = lines[start_line-1-ind];
-                  lines.splice(start_line-1, 1);
-                }else if (ev.insert_content){
-                  lines.splice(start_line-1, 0, ev.insert_content);
-                  ind--;
-                }else if (ev.new_content){
-                  lines.splice(start_line-1, 0, ev.new_content);
-                  ind--;
-                }
+            action.editions?.forEach(ev => {
+              let txt = '';
+              const start_line = parseInt(ev.start_line, 10);
+              if( start_line && lines ){
+                txt = lines[start_line-1-ind];
+                lines.splice(start_line-1, 1);
+              }else if (ev.insert_content){
+                lines.splice(start_line-1, 0, ev.insert_content);
+                ind--;
+              }else if (ev.new_content){
+                lines.splice(start_line-1, 0, ev.new_content);
+                ind--;
+              }
 
-                 if( ev.insert_content !== undefined ) {
-                  html += "+l" + start_line + " : " + ev.insert_content + "\n";
-                }
-                else if( ev.new_content ) {
-                   html += "-l" + start_line + " : " + lines[start_line - 1] + "\n";
-                   html += "+l" + start_line + " : " + ev.new_content + "\n";
-                 }
-                else
-                  html += "-l"+start_line + " : " + txt+"\n";
+              if( ev.insert_content !== undefined ) {
+                html += "+l" + start_line + " : " + ev.insert_content + "\n";
+              }
+              else if( ev.new_content ) {
+                html += "-l" + start_line + " : " + lines[start_line - 1] + "\n";
+                html += "+l" + start_line + " : " + ev.new_content + "\n";
+              }
+              else
+                html += "-l"+start_line + " : " + txt+"\n";
 
-              })
-            }
-            if (action.cmd === 'ANALYSIS')
-              return <div className="msg msg-analysis">
-                <Markdown html>{action.content}</Markdown>
-              </div>
-            if (action.cmd === 'CREATE_FILE')
-              return <div className="msg msg-code">
-                {action.cmd === "CREATE_FILE" ? <FaFile /> : <FaEdit />}<b>{action.file}</b> ({action.language})<br />
-                <CodeBlock
-                  text={html}
-                  language={action.language}
-                  showLineNumbers
-                  theme={dracula}
-                />
-              </div>
-            if( action.cmd === 'EDIT_FILE'){
-              return <><FaEdit /><b>{action.file}</b><br />
+            })
+          }
+          if (action.cmd === 'ANALYSIS')
+            return <div className="msg msg-analysis">
+              <Markdown html>{action.content}</Markdown>
+            </div>
+          if (action.cmd === 'CREATE_FILE')
+            return <div className="msg msg-code">
+              {action.cmd === "CREATE_FILE" ? <FaFile /> : <FaEdit />}<b>{action.file}</b> ({action.language})<br />
+              <CodeBlock
+                text={html}
+                language={action.language}
+                showLineNumbers
+                theme={dracula}
+              />
+            </div>
+          if( action.cmd === 'EDIT_FILE'){
+            return <><FaEdit /><b>{action.file}</b><br />
               <CodeBlock
                 text={html}
                 language={"PlainText"}
                 showLineNumbers={false}
                 theme={dracula}
               /></>
-            }
-            return <div className="msg msg-code"><CodeBlock text={JSON.stringify(action)} language={'plaintext'}
-                                                            theme={dracula} /></div>
-          })
-        }
-        return <div className={`msg msg-${message.role}`}>
-          <Markdown>{message.content}</Markdown>
-        </div>
-      })}
+          }
+          return <div className="msg msg-code"><CodeBlock text={JSON.stringify(action)} language={'plaintext'}
+                                                          theme={dracula} /></div>
+        })
+      }
+      return <div className={`msg msg-${message.role}`}>
+        <Markdown>{message.content}</Markdown>
+      </div>
+    })
+  }, [messages])
+  return <div className="chat">
+
+    <div className="chat-messages">
+      {}
     </div>
     <div className="chat-prompt" ref={chatRef}>
     <textarea
       placeholder="Demandez à l'IA de vous créer un outil, de faire une recherche sur le web, ou de persister des données..."
       rows={8} value={prompt} onChange={e => setPrompt(e.target.value)}>
     </textarea>
-      <Button onClick={handleNewMessage}><Trans i18nKey="links.generate">Générer</Trans></Button>
+      <Button onClick={handleNewMessage}><Trans i18nKey="links.generate">Continuer</Trans></Button>
     </div>
   </div>
 };
