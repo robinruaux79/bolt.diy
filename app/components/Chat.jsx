@@ -42,41 +42,7 @@ export const Chat = ({project}) => {
       if( jsonData && !jsonData.actions ) {
         jsonData = {actions: [jsonData]}
       }
-      jsonData.actions.forEach(a => {
-          if( a.cmd === 'CREATE_FILE') {
-            setFiles(fs => [...fs, { file: a.file, content: a.content }]);
-            console.log("CREATED FILE " + a.file);
-          }else if( a.cmd === 'EDIT_FILE'){
-            const lines = files.find(f=>f.file === a.file)?.content.split("\n");
-            if( lines ){
-              let ind = 0;
-              a.editions?.forEach(ev => {
-                let txt = '';
-                const start_line = parseInt(ev.start_line, 10);
-                if( !ev.old_content && start_line && lines ){
-                  lines.splice(start_line-1-ind, 1);
-                  ind++;
-                }
-                if (ev.new_content){
-                  lines.splice(start_line-1-ind, 0, ev.new_content);
-                  ind--;
-                }
-                if(ev.insert_content){
-                  lines[start_line-1-ind] = ev.insert_content;
-                }
-              })
-              setFiles(files => {
-                return files.map(f => {
-                  if( f.file === a.file ){
-                    return {...f, content: lines.join("\n")};
-                  }
-                  return f;
-                });
-              })
-            }
-//            files[a.file] = lines.join('\n');
-          }
-        });
+
       // handle markdown JSON commands and returns the actions traces
       try {
         const res = await fetch('/api/project/'+project.hash+'/actions', {
@@ -91,7 +57,7 @@ export const Chat = ({project}) => {
           console.log(json.actions);
         }
       } catch (e){
-        console.log(e)
+        console.log("error", e)
       }
 
       console.log('Finished streaming');
@@ -106,7 +72,7 @@ export const Chat = ({project}) => {
       {
         id: `${new Date().getTime()}`,
         role: 'user',
-        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et implémente le concept (édite/crée aussi la TODO.md pour cocher l\'étape)' : 'Etonne-moi, fier codeur !'),
+        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et code tout que tu peux améliorer de façon détaillée (crée/édite aussi la TODO.md si tu as finalisé l\'étape)' : 'Etonne-moi, fier codeur !'),
       }]);
     reload();
     setPrompt('');
@@ -118,39 +84,19 @@ export const Chat = ({project}) => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-
   const memMessages = useMemo(() => {
-    return messages.map(message => {
+    return messages?.map(message => {
       let json;
       if( message.role === "system")
         return <></>;
-
       if (message.role === 'assistant') {
         try {
           json = JSON.parse(message.content);
           console.log("JSON parsed", json)
         } catch (e) {
-
           console.log("JSON parsed", message.content)
         }
       }
-      /*
-        js.editions?.forEach(ev => {
-          let txt = '';
-          if( !ev.old_content && ev.start_line ){
-            txt = lines[ev.start_line-1];
-            lines.splice(ev.start_line-1, 1);
-          }else{
-
-          }
-          html = html + (ev.start_line ? ev.start_line + ":" : "") + "<div style='color:red'>-" +(txt || ev.old_content) + "</div><div style='color:green'>" + ev.new_content + "</div><br />";
-        })
-        setJsonHtml(html);
-        console.log(lines.join("\n"), js.file);
-        await workbenchStore.filesStore.saveFile(js.file, [...lines].join("\n"));
-        workbenchStore.removeFromUnsaved(js.file);
-        workbenchStore.showWorkbench.set(true);
-      setHTML(await codeToHtml(code, { lang: language, theme }));*/
       if( json && !json.actions ) {
         json = {actions: [json]};
       }
@@ -164,15 +110,15 @@ export const Chat = ({project}) => {
             action.editions?.forEach(ev => {
               let txt = '';
               const start_line = parseInt(ev.start_line, 10);
-              if( start_line && lines ){
+              if (ev.insert_content){
+                lines.splice(start_line-1, 0, ev.insert_content);
+                ind-=(ev.insert_content.split("\n").length+1);
+              } else if (ev.new_content){
+                lines.splice(start_line-1, 0, ev.new_content);
+                ind-=(ev.new_content.split("\n").length+1);
+              } else if( start_line && lines ){
                 txt = lines[start_line-1-ind];
                 lines.splice(start_line-1, 1);
-              }else if (ev.insert_content){
-                lines.splice(start_line-1, 0, ev.insert_content);
-                ind--;
-              }else if (ev.new_content){
-                lines.splice(start_line-1, 0, ev.new_content);
-                ind--;
               }
 
               if( ev.insert_content !== undefined ) {

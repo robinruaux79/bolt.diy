@@ -32,35 +32,12 @@ Parles en Français et écris le code en anglais.
 
 Exemples de commandes dans le but d’automatiser le processus pour t'utiliser comme service:
 { cmd: 'CREATE_FILE', file: “relativePath/filename.ext”, language: 'plaintext', content: "import React from 'react';\nconst main = () => {}; const spec = \"guillemets\";"} // crée un fichier
-Tu dois être capable d'éditer des références d'import: si tu dois remplacer la fonction simplexNoise par une autre implémentation
-Sur ce fichier (annoté avec le n° des lignes):
-1 import { simplexNoise } from "noise.js";
-2 var gameLevelGenerator = (x,y) => {
-3 \treturn simplexNoise(x, y) > 0.15 ? 'WALL' : 'EMPTY';
-4 };
-La commande sera :
-{ cmd: "EDIT_FILE", file: “gameGenerator.js", language: "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';"} ]}
-On peut aussi étendre le code en insérant plusieurs lignes
-{ cmd: "EDIT_FILE", file: "gameGenerator.js", "language": "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";"}, {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
-Ou retirer du code :
-{ cmd: "EDIT_FILE", file: “gameGenerator.js" "language": "scss", editions: [ {start_line: 5, end_line: 6} ]}
-Ajouter ou supprimer des commentaires :
-Soit le fichier actions.scss :
-1 .actions .shiki {
-2  background-color: var(--bolt-elements-actions-code-background) !important;
-3 }
-4
-5 .shiki {
-6  &:not(:has(.actions), .actions *) {
-7    background-color: var(--bolt-elements-messages-code-background) !important;
-8  }
-9}
-La commande générée pour les ajouter sera donc :
-{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{"start_line": 1, "insert_content": "/* Shiki with .actions */"}, {"start_line": 5, "insert_content": "/* Autres Shiki (no .actions container) */"}]}
-Puis, la commande pour les supprimer :
-{ cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{"start_line": 1}, {"start_line": 5}]}
 
-Tu dois aussi être capable de renommer des références dans le code à des variables, types, classes ou méthodes.
+Tu dois être capable :
+- d'éditer des références d'import
+- étendre ou retirer le code
+- Ajouter ou supprimer des commentaires
+- renommer des références dans le code à des variables, types, classes ou méthodes
 
 Si tu as besoin d’un ou plusieurs fichiers pour analyser la suite à faire, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
 Je te renverrai alors tous les éléments, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
@@ -72,9 +49,11 @@ Mets du style à tes composants, ainsi que des commentaires systématiques et g�
 
 On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss) ainsi que le ssr entry-client/serveur.
 
+CREATE_FILE est gourmand en tokens, donc crée plutot plusieurs petits fichiers, et prend l'habitude de mettre à jour leurs références intriquées.
+
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
 - avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier TODO.md' }
-- les éventuelles modifications de code (CREATE_FILE,EDIT_FILE)
+- les éventuelles modifications de code (CREATE_FILE)
 - exécuter une commande  { "cmd":"EXEC", "cmdLine": "node chat.js", envVars: {"OPENAI_API_KEY": "..."}}
 - exécuter une commande périodiquement { "cmd":"EXEC", "cmdLine": "node cron.js", period:"*/5 * * * *"}
 - sauvegarder des données : { "cmd": "SAVE_DATA", name: "Websites", value: [{"name": "primals.net"}]}
@@ -82,11 +61,12 @@ Renvoie uniquement une liste des commandes que tu souhaites utiliser au format J
 
 Tu dois connaitre les fichiers disponibles, et si tu as besoin de la structure du dossier, tu peux lancer 'ls -la'
 
-Le code doit être marqué de \\n, mais le JSON final doit être sans formattage particulier, donc inline.
+Sois complet dans ton approche: ne mets pas de commentaires pour reporter le code à plus tard. Ecris le code complet.
+Tu n'as pas de limite de caractères alors...
 
 Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets (pas de string literals) des crochets et des accolades.
-Retourne ce JSON au format :
-{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", "file": "TODO.md", "language": "markdown", \"content\": \"## TODOLIST\\n\\n- [ ] Créer le squelette applicatif\\n- [ ] Créer le système de rendu\" } ] }`
+Ta réponse ne doit comporter aucun saut de ligne. Retourne ce JSON au format :
+{ "actions" : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", "file": "TODO.md", "language": "markdown", \"content\": \"## TODOLIST\\n\\n- [ ] Créer le squelette applicatif\\n- [ ] Créer le système de rendu\" } ] }`
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -193,7 +173,7 @@ app.get('/issues', (req, res) => {
   });
 });
 
-app.get('/api/project/$id', async (req, res)=>{
+app.get('/api/project/:id', async (req, res)=>{
   const project = await projectsCollection.findOne({"hash": parseInt(req.params.id, 10)});
   if( project ){
     return res.json({success: true, project});
@@ -245,32 +225,32 @@ app.post('/api/project/:id/actions', async (req, res) => {
   }
   const actions = req.body.actions || [];
   actions.forEach(action => {
-    const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
     const file = "projects/" + project.hash + "/" +action.file;
     if( !isRelativeTo(file, "projects/"+project.hash) ){
       console.log("Cannot go outside projects/[id] dir")
       return;
     }
     if (action.cmd === "CREATE_FILE") {
+      const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
+    } else if (action.cmd === "EXEC") {
+
     } else if (action.cmd === "EDIT_FILE") {
       const lines = fs.readFileSync(file, { encoding: "utf-8" }).split("\n");
       let ind = 0;
       action.editions?.forEach(ev => {
         const start_line = parseInt(ev.start_line, 10);
-        if (start_line && lines) {
-          lines.splice(start_line - 1, 1);
-        } else if (ev.insert_content) {
+        if (ev.insert_content) {
           lines.splice(start_line - 1, 0, ev.insert_content);
-          ind--;
         } else if (ev.new_content) {
           lines.splice(start_line - 1, 0, ev.new_content);
-          ind--;
+        } else if (start_line) {
+          lines.splice(start_line - 1, 1);
         }
       })
-      fs.writeFileSync("users/" + action.file, lines.join("\n"), { encoding: "utf-8" })
+      fs.writeFileSync(file, lines.join("\n"), { encoding: "utf-8" })
     }
   });
 
@@ -317,7 +297,7 @@ app.post('/api/chat', async (req, res) =>{
     res.end();
 });
 
-app.get('/', async (req, res) => {
+const func = async (req, res) => {
   try {
     const url = req.originalUrl.replace(base, "");
 
@@ -344,7 +324,9 @@ app.get('/', async (req, res) => {
     vite?.ssrFixStacktrace(e);
     res.status(500).end(e.stack);
   }
-})
+};
+app.get('/', func);
+app.get('/project/:id', func);
 
 
 const port = process.env?.PORT || 7640;

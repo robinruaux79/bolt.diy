@@ -1,7 +1,7 @@
-import React, {lazy, Suspense, useState} from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import {QueryClient, QueryClientProvider} from 'react-query'
 import './App.scss'
-import {NavLink, Outlet, Route, Routes, useNavigate} from "react-router-dom";
+import { NavLink, Outlet, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {Trans} from "react-i18next";
 
@@ -23,8 +23,7 @@ function App() {
     const theme = usePreferredColorScheme();
 
     const [resetTime, setResetTime] = useState(0);
-    const bar = (
-        <Suspense>
+    const bar = <Suspense>
             <PrimalsBar
                 title={
                     <span>
@@ -46,9 +45,9 @@ function App() {
                 userLinks={[]}
                 widgets={[]}
             />
-        </Suspense>
-    );
-    return <QueryClientProvider client={queryClient}>
+        </Suspense>;
+  const [project, setProject] = useState(null);
+  return <QueryClientProvider client={queryClient}>
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NS94ZLLZ" height="0" width="0" style={{display:'none',visibility:'hidden'}}></iframe></noscript>
         <div className={theme}>
             <div className="foreground">
@@ -57,7 +56,8 @@ function App() {
                     <main>
                         <Routes>
                             <Route path="/" element={<Outlet />}>
-                              <Route path="" element={<Project></Project>} />
+                              <Route path="" element={<Project project={project} onProjectLoaded={(p) => setProject(p)}></Project>} />
+                              <Route path="project/:id" element={<Project onProjectLoaded={(p) => setProject(p)}></Project>} />
                             </Route>
                         </Routes>
                     </main>

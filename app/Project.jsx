@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { TextField } from './Field.jsx';
 import Button from './Button.jsx';
 
 import "./Project.scss"
 import { Chat } from './components/Chat.jsx';
+import { useParams } from 'react-router-dom';
 
-export const Project = ({ children, user = {} }) => {
+export const Project = ({ children, project = {}, user = {}, onProjectLoaded }) => {
 
   const [projectSlug, setProjectSlug] = useState('');
   const [projectName, setProjectName] = useState('');
   const [showNewProject, setNewProjectVisible] = useState(true);
 
-  const [currentProject, setCurrentProject] = useState(null);
+  const params = useParams();
+  useEffect(() => {
+    fetch("/api/project/"+params.id, { method: 'GET', headers: { 'Content-Type': 'application/json' }}).then((e) => {
+      return e.json()
+    }).then(e => {
+      if (e.success) {
+        setNewProjectVisible(false);
+        setCurrentProject(e.project);
+      }
+    })
+  }, [params])
+  const [currentProject, setCurrentProject] = useState(project);
    const mutationNewProject = useMutation(() => {
     const project= {
       name: projectName,
@@ -25,6 +37,8 @@ export const Project = ({ children, user = {} }) => {
     if(r.success){
       setCurrentProject(r.project);
       setNewProjectVisible(false);
+      onProjectLoaded?.(r.project);
+      history.pushState({}, '', '/project/'+r.project.hash);
     }
      }, onError: (e) => {
      }});
