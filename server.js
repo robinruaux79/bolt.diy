@@ -70,7 +70,7 @@ Cela te permettra de t'orienter facilement dans les actions à mener par la suit
 
 Mets du style à tes composants, ainsi que des commentaires systématiques et générateurs de documentation sur chaque composant.
 
-On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss)
+On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss) ainsi que le ssr entry-client/serveur.
 
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
 - avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier TODO.md' }
@@ -231,6 +231,12 @@ schedule.scheduleJob("*/15 * * * *", async () => {
   await projectsCollection.deleteMany(filter);
 });
 
+function isRelativeTo(dir, parent) {
+  const relative = path.relative(parent, dir);
+  return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+
 app.post('/api/project/:id/actions', async (req, res) => {
   const filter = { hash: parseInt(req.params.id, 10)};
   const project = await projectsCollection.findOne(filter);
@@ -239,11 +245,15 @@ app.post('/api/project/:id/actions', async (req, res) => {
   }
   const actions = req.body.actions || [];
   actions.forEach(action => {
+    const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
     const file = "projects/" + project.hash + "/" +action.file;
+    if( !isRelativeTo(file, "projects/"+project.hash) ){
+      console.log("Cannot go outside projects/[id] dir")
+      return;
+    }
     if (action.cmd === "CREATE_FILE") {
-      const p = "projects/" + project.hash + "/" + path.dirname(action.file);
-      if( !fs.existsSync(p))
-        fs.mkdirSync(p, { recursive: true });
+      if( !fs.existsSync(dir))
+        fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
     } else if (action.cmd === "EDIT_FILE") {
       const lines = fs.readFileSync(file, { encoding: "utf-8" }).split("\n");
