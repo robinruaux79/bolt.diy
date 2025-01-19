@@ -1,0 +1,91 @@
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0px;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  color: #979797;
+  border: 1px solid #B2BBC2;
+  span {
+    display: inline-block;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+.dark .btn {
+  color: #f1f1f1;
+  background-color: black;
+}
+
+.btn:hover {
+  border-color: #646cff;
+}
+
+.btn:focus,
+.btn:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.btn-disabled:hover {
+  border-color: transparent;
+}
+
+.btn-disabled:focus,
+.btn-disabled:focus-visible {
+  outline: none;
+}
+
+.btn-disabled {
+  color: #575757;
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+}
+.dark .btn-disabled {
+    background-color:black;
+}
+.btn-group {
+  display: flex;
+  width: fit-content;
+  gap: 8px;
+  padding: 4px;
+}
+
+.btn {
+  &:has(.alignment-left) {
+    flex-direction: row;
+  }
+
+  &:has(.alignment-right) {
+    flex-direction: row-reverse;
+  }
+
+  &:has(.alignment-top) {
+    flex-direction: column;
+  }
+
+  &:has(.alignment-bottom) {
+    flex-direction: column-reverse;
+  }
+
+  svg.alignment-left {
+    margin-right: 8px;
+  }
+
+  svg.alignment-right {
+    margin-left: 8px;
+  }
+
+  svg.alignment-top {
+  }
+
+  svg.alignment-bottom {
+    margin-top: 8px;
+  }
+}

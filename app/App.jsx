@@ -11,6 +11,7 @@ const queryClient = new QueryClient()
 
 import { usePreferredColorScheme} from "./hooks.js";
 import { Chat } from './components/Chat.jsx';
+import { Project } from './Project.jsx';
 
 const PrimalsBar = lazy(
     () => import("../../primals/src/components/sso/PrimalsBar.jsx"),
@@ -56,7 +57,7 @@ function App() {
                     <main>
                         <Routes>
                             <Route path="/" element={<Outlet />}>
-                                <Route path="" element={<Chat />} />
+                              <Route path="" element={<Project></Project>} />
                             </Route>
                         </Routes>
                     </main>

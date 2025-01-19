@@ -11,7 +11,7 @@ import { CodeBlock, dracula } from 'react-code-blocks';
 import { FaEdit, FaFile } from 'react-icons/fa';
 
 const REGEXP_CODE = new RegExp("```([^`]*)```", "g");
-export const Chat = () => {
+export const Chat = ({project}) => {
 
   const [files, setFiles] = useState([]);
   const apiKeys = [];
@@ -79,7 +79,7 @@ export const Chat = () => {
         });
       // handle markdown JSON commands and returns the actions traces
       try {
-        const res = await fetch('/gen/actions', {
+        const res = await fetch('/api/project/'+project.hash+'/actions', {
           headers: {
             "Content-Type": "application/json",
           },
@@ -91,7 +91,7 @@ export const Chat = () => {
           console.log(json.actions);
         }
       } catch (e){
-
+        console.log(e)
       }
 
       console.log('Finished streaming');
@@ -106,7 +106,7 @@ export const Chat = () => {
       {
         id: `${new Date().getTime()}`,
         role: 'user',
-        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et implémente le concept (retournes les commandes JSON, édite aussi la TODO.md pour cocher l\'étape)' : 'Etonne-moi, fier codeur !'),
+        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et implémente le concept (édite/crée aussi la TODO.md pour cocher l\'étape)' : 'Etonne-moi, fier codeur !'),
       }]);
     reload();
     setPrompt('');

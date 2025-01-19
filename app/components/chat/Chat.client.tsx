@@ -157,9 +157,10 @@ export const ChatImpl = memo(
           // You can now use the usage data as needed
         }
 
+        console.log("FINISEHD");
         // handle markdown JSON commands and returns the actions traces
         try {
-          const res = await fetch('/api/actions', {
+          const res = await fetch('/api/project/$id/actions', {
             headers: {
               "Content-Type": "application/json",
             },

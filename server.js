@@ -9,7 +9,7 @@ import csrfDSC from 'express-csrf-double-submit-cookie'
 import process from "node:process";
 import { pipeline } from "node:stream/promises";
 import MongoStore from 'connect-mongo';
-
+import path from "node:path"
 import {createServer} from "vite";
 import http from "http";
 import { createDataStream, streamText } from 'ai';
@@ -21,18 +21,16 @@ Tu es interfacé avec un serveur de données et de fichiers (par utilisateur)
 Crée les fichiers toi-même plutot que les demander.
 Si tu dois programmer, préfère le template ViteJS/React/ExpressJS avec des fichiers JSX et SCSS, et le SSR entry-client/server et crée une todolist du projet.
 
-Ecris si besoin les règles de style dans des fichiers SCSS par composant, avec des sélecteurs CSS atomiques plutot que des noms abstraits. Imports et fichiers JS ES uniquement. corrige les sauts de ligne si besoin. N’oublie pas d’importer les fichiers SCSS entre eux si ils dépendent l’un de l’autre ,
-Sur petits écrans il faut baisser la taille des éléments pour tout faire tenir dans 320px. Pense mobile first pour tes media queries
+Ecris si besoin des sélecteurs CSS atomiques plutot que des noms abstraits.
+Imports et fichiers JS ES uniquement. Corrige les sauts de ligne.
+N’oublie pas d’importer les fichiers entre eux si ils dépendent l’un de l’autre.
+Sur petits écrans il faut tenir dans 320px. Pense mobile first pour tes media queries.
 
 Parles en Français et écris le code en anglais.
 
-Exemples de commandes :
+Exemples de commandes dans le but d’automatiser le processus pour t'utiliser comme service:
 { cmd: 'CREATE_FILE', file: “relativePath/filename.ext”, language: 'plaintext', content: "import React from 'react';\nconst main = () => {}; const spec = \"guillemets\";"} // crée un fichier
-Le code dans 'content' doit être marqué de \n, mais le JSON final doit être sans formattage particulier, donc inline.
-
-Voici des exemples d'usage que tu maitrisera et appliquera en tant que codeur :
-
-Tu dois être capable d'éditer des références d'import, par exemple tu dois remplacer la fonction simplexNoise par une autre implémentation :
+Tu dois être capable d'éditer des références d'import: si tu dois remplacer la fonction simplexNoise par une autre implémentation
 Sur ce fichier (annoté avec le n° des lignes):
 1 import { simplexNoise } from "noise.js";
 2 var gameLevelGenerator = (x,y) => {
@@ -40,24 +38,21 @@ Sur ce fichier (annoté avec le n° des lignes):
 4 };
 La commande sera :
 { cmd: "EDIT_FILE", file: “gameGenerator.js", language: "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';"} ]}
-
 On peut aussi étendre le code en insérant plusieurs lignes
 { cmd: "EDIT_FILE", file: "gameGenerator.js", "language": "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
-
 Ou retirer du code :
 { cmd: "EDIT_FILE", file: “gameGenerator.js" "language": "scss", editions: [ {start_line: 5, end_line: 6} ]}
-
 Ajouter ou supprimer des commentaires :
 Soit le fichier actions.scss :
-.actions .shiki {
-  background-color: var(--bolt-elements-actions-code-background) !important;
-}
-
-.shiki {
-  &:not(:has(.actions), .actions *) {
-    background-color: var(--bolt-elements-messages-code-background) !important;
-  }
-}
+1 .actions .shiki {
+2  background-color: var(--bolt-elements-actions-code-background) !important;
+3 }
+4
+5 .shiki {
+6  &:not(:has(.actions), .actions *) {
+7    background-color: var(--bolt-elements-messages-code-background) !important;
+8  }
+9}
 La commande générée pour les ajouter sera donc :
 { cmd: 'EDIT_FILE', file: “actions.scss”, language: 'scss', editions: [{"start_line": 1, "insert_content": "/* Shiki with .actions */"}, {"start_line": 5, "insert_content": "/* Autres Shiki (no .actions container) */"}]}
 Puis, la commande pour les supprimer :
@@ -66,14 +61,12 @@ Puis, la commande pour les supprimer :
 Tu dois aussi être capable de renommer des références dans le code à des variables, types, classes ou méthodes.
 
 Si tu as besoin d’un ou plusieurs fichiers pour analyser la suite à faire, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
-Je te renverrai alors tous les éléments que tu m’auras demandé, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
+Je te renverrai alors tous les éléments, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
 
-Cela nous permettra également d’automatiser le processus pour t'utiliser comme service.
-
-Crée également un package.json et un fichier TODO.md avec CREATE_FILE si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir ainsi que les sous-étapes, avec une description détaillée) avant de commencer les développements.
+Crée également un package.json et un fichier TODO.md si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir ainsi que les sous-étapes, avec une description détaillée d'une centaine de mots) avant de commencer les développements.
 Cela te permettra de t'orienter facilement dans les actions à mener par la suite.
 
-Mets un minimum de code ou de style à tes composants, ainsi que des commentaires systématiques sur chaque composant
+Mets du style à tes composants, ainsi que des commentaires systématiques et générateurs de documentation sur chaque composant.
 
 On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss)
 
@@ -87,10 +80,11 @@ Renvoie uniquement une liste des commandes que tu souhaites utiliser au format J
 
 Tu dois connaitre les fichiers disponibles, et si tu as besoin de la structure du dossier, tu peux lancer 'ls -la'
 
-Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets, des crochets et des accolades.
-Le JSON ne doit pas utiliser les string literals mais les guillements et ne fais pas de retours à la ligne.
-n'applique aucun traitement au JSON normalisé et Retourne au format :
-{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", \"content\": \"## TODOLIST\n\n- [ ] Créer le squelette applicatif\n- [ ] Créer le système de rendu\" } ] }`
+Le code doit être marqué de \\n, mais le JSON final doit être sans formattage particulier, donc inline.
+
+Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets (pas de string literals) des crochets et des accolades.
+Retourne ce JSON au format :
+{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", "file": "TODO.md", "language": "markdown", \"content\": \"## TODOLIST\\n\\n- [ ] Créer le squelette applicatif\\n- [ ] Créer le système de rendu\" } ] }`
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -106,11 +100,12 @@ const dbName = 'gen';
 console.log('Connected successfully to server');
 const db = client.db(dbName);
 const eventsCollection = db.collection("events");
+const projectsCollection = db.collection("projects");
 
 const opts = {
   storeClient: Promise.resolve(client),
   dbName: dbName,
-  points: 250, // Number of points
+  points: 2500, // Number of points
   duration: 1, // Per second(s)
 };
 
@@ -126,12 +121,30 @@ const rateLimiterMiddleware = (req, res, next) => {
     });
 };
 
+
+export const getObjectHash = (obj, uniqueFields = null, key = "") => {
+  let str = "";
+  Object.keys(obj)
+    .sort((c1, c2) => c1.localeCompare(c2))
+    .forEach((k1, index) => {
+      const v = obj[k1];
+      if (v !== undefined) {
+        if (uniqueFields?.length > 0 && uniqueFields.includes(k1)) str += v;
+        else if (uniqueFields === null) str += v;
+      }
+    });
+  var buffer = str + key;
+  return buffer.split("").reduce((hash, char) => {
+    return char.charCodeAt(0) + (hash << 6) + (hash << 16) - hash;
+  }, 0);
+};
+
 // Use connect method to connect to the server
 await client.connect();
 
 // Create http server
 const app = express()
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 app.use(cookieParser(isProduction ? 'ergRRà_546bbfg345fer45tyhtbmlke990eref' : 'secret'));
 app.use(expressSession({
@@ -178,13 +191,49 @@ app.get('/issues', (req, res) => {
   });
 });
 
-app.post('/gen/actions', (req, res) => {
+app.get('/api/project/$id', async (req, res)=>{
+  const project = await projectsCollection.findOne({"hash": parseInt(req.params.id, 10)});
+  if( project ){
+    return res.json({success: true, project});
+  }else{
+    return res.json({success: false});
+  }
+});
+app.post('/api/project', async (req, res)=>{
+  const name = typeof(req.body.name) === 'string' ? req.body.name : null;
+  if( !name ){
+    return res.json({success: false, error: 'Malformed request', t: req.body});
+  }
+  const hash = getObjectHash({ name, time: new Date().getTime() });
+  const collision = await projectsCollection.findOne({hash});
+  if( collision ){
+    return res.json({success: false, error: 'Collision detected. Please retry.'});
+  }
+  await projectsCollection.insertOne({hash, name});
+  const project = await projectsCollection.findOne({hash});
+  if( project ){
+    return res.json({success: true, project});
+  }else{
+    return res.json({success: false});
+  }
+});
+
+app.post('/api/project/:id/actions', async (req, res) => {
+
+  const project = await projectsCollection.findOne({ hash: parseInt(req.params.id, 10)});
+  if (!project){
+    return res.json({success: false })
+  }
   const actions = req.body.actions || [];
   actions.forEach(action => {
+    const file = "users/" + project.hash + "/" +action.file;
     if (action.cmd === "CREATE_FILE") {
-      fs.writeFileSync("users/" + action.file, action.content, { encoding: "utf-8" })
+      const p = "users/" + project.hash + "/" + path.dirname(action.file);
+      if( !fs.existsSync(p))
+        fs.mkdirSync(p, { recursive: true });
+      fs.writeFileSync(file, action.content, { encoding: "utf-8" })
     } else if (action.cmd === "EDIT_FILE") {
-      const lines = fs.readFileSync("users/" + action.file, { encoding: "utf-8" }).split("\n");
+      const lines = fs.readFileSync(file, { encoding: "utf-8" }).split("\n");
       let ind = 0;
       action.editions?.forEach(ev => {
         const start_line = parseInt(ev.start_line, 10);
@@ -201,6 +250,7 @@ app.post('/gen/actions', (req, res) => {
       fs.writeFileSync("users/" + action.file, lines.join("\n"), { encoding: "utf-8" })
     }
   });
+  res.json({success: true});
 });
 
 app.post('/api/chat', async (req, res) =>{
