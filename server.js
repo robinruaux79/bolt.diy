@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser"
 import expressSession from "express-session"
 import csrfDSC from 'express-csrf-double-submit-cookie'
 import process from "node:process";
+import schedule from "node-schedule";
+
 import { pipeline } from "node:stream/promises";
 import MongoStore from 'connect-mongo';
 import path from "node:path"
@@ -209,7 +211,7 @@ app.post('/api/project', async (req, res)=>{
   if( collision ){
     return res.json({success: false, error: 'Collision detected. Please retry.'});
   }
-  await projectsCollection.insertOne({hash, name});
+  await projectsCollection.insertOne({hash, name, updatedAt: new Date().getTime() });
   const project = await projectsCollection.findOne({hash});
   if( project ){
     return res.json({success: true, project});
@@ -218,17 +220,28 @@ app.post('/api/project', async (req, res)=>{
   }
 });
 
-app.post('/api/project/:id/actions', async (req, res) => {
+schedule.scheduleJob("*/15 * * * *", async () => {
+  console.log("Deleting old projects");
+  const minutesBeforeDestruction = 60*72;
+  const filter = { updatedAt: { $lt: new Date().getTime()-1000*minutesBeforeDestruction}};
+  const projects = await projectsCollection.find(filter).toArray();
+  projects.forEach(project => {
+    fs.rmSync("projects/"+project.hash, { recursive: true, force:true});
+  })
+  await projectsCollection.deleteMany(filter);
+});
 
-  const project = await projectsCollection.findOne({ hash: parseInt(req.params.id, 10)});
+app.post('/api/project/:id/actions', async (req, res) => {
+  const filter = { hash: parseInt(req.params.id, 10)};
+  const project = await projectsCollection.findOne(filter);
   if (!project){
     return res.json({success: false })
   }
   const actions = req.body.actions || [];
   actions.forEach(action => {
-    const file = "users/" + project.hash + "/" +action.file;
+    const file = "projects/" + project.hash + "/" +action.file;
     if (action.cmd === "CREATE_FILE") {
-      const p = "users/" + project.hash + "/" + path.dirname(action.file);
+      const p = "projects/" + project.hash + "/" + path.dirname(action.file);
       if( !fs.existsSync(p))
         fs.mkdirSync(p, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
@@ -250,6 +263,10 @@ app.post('/api/project/:id/actions', async (req, res) => {
       fs.writeFileSync("users/" + action.file, lines.join("\n"), { encoding: "utf-8" })
     }
   });
+
+  await projectsCollection.updateOne(filter, {
+    "$set": { updatedAt: new Date().getTime() }
+  })
   res.json({success: true});
 });
 
