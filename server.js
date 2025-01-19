@@ -41,7 +41,7 @@ Sur ce fichier (annoté avec le n° des lignes):
 La commande sera :
 { cmd: "EDIT_FILE", file: “gameGenerator.js", language: "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';"} ]}
 On peut aussi étendre le code en insérant plusieurs lignes
-{ cmd: "EDIT_FILE", file: "gameGenerator.js", "language": "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
+{ cmd: "EDIT_FILE", file: "gameGenerator.js", "language": "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";"}, {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
 Ou retirer du code :
 { cmd: "EDIT_FILE", file: “gameGenerator.js" "language": "scss", editions: [ {start_line: 5, end_line: 6} ]}
 Ajouter ou supprimer des commentaires :
@@ -73,7 +73,7 @@ Mets du style à tes composants, ainsi que des commentaires systématiques et g�
 On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss)
 
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
-- avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier README.md' }
+- avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier TODO.md' }
 - les éventuelles modifications de code (CREATE_FILE,EDIT_FILE)
 - exécuter une commande  { "cmd":"EXEC", "cmdLine": "node chat.js", envVars: {"OPENAI_API_KEY": "..."}}
 - exécuter une commande périodiquement { "cmd":"EXEC", "cmdLine": "node cron.js", period:"*/5 * * * *"}
