@@ -79,12 +79,12 @@ export const Chat = () => {
         });
       // handle markdown JSON commands and returns the actions traces
       try {
-        const res = await fetch('/api/actions', {
+        const res = await fetch('/gen/actions', {
           headers: {
             "Content-Type": "application/json",
           },
           method: 'POST',
-          body: JSON.stringify({message})
+          body: JSON.stringify({actions: jsonData.actions})
         });
         if( res.ok ){
           const json = await res.json();
@@ -106,7 +106,7 @@ export const Chat = () => {
       {
         id: `${new Date().getTime()}`,
         role: 'user',
-        content: prompt ? prompt : 'La suite, s\'il te plait. Met à jour le fichier TODO.md.',
+        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et implémente le concept (retournes les commandes JSON, édite aussi la TODO.md pour cocher l\'étape)' : 'Etonne-moi, fier codeur !'),
       }]);
     reload();
     setPrompt('');
@@ -222,7 +222,7 @@ export const Chat = () => {
   return <div className="chat">
 
     <div className="chat-messages">
-      {}
+      {memMessages}
     </div>
     <div className="chat-prompt" ref={chatRef}>
     <textarea

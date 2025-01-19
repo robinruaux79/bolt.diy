@@ -39,13 +39,13 @@ Sur ce fichier (annoté avec le n° des lignes):
 3 \treturn simplexNoise(x, y) > 0.15 ? 'WALL' : 'EMPTY';
 4 };
 La commande sera :
-{ cmd: 'EDIT_FILE', file: “gameGenerator.js language: 'scss', editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';"} ]}
+{ cmd: "EDIT_FILE", file: “gameGenerator.js", language: "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 3, new_content: "\treturn simplexNoise3D(x, y) > 0.15 ? 'WALL' : 'EMPTY';"} ]}
 
 On peut aussi étendre le code en insérant plusieurs lignes
-{ cmd: 'EDIT_FILE', file: “gameGenerator.js language: 'scss', editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
+{ cmd: "EDIT_FILE", file: "gameGenerator.js", "language": "scss", editions: [ {start_line: 1, new_content: "import { simplexNoise3D } from \"noise.js\";", {start_line: 5, new_content: "// On génère l'origine du niveau\nconst originObject = gameLevelGenerator(0, 0);"} ]}
 
 Ou retirer du code :
-{ cmd: 'EDIT_FILE', file: “gameGenerator.js language: 'scss', editions: [ {start_line: 5, end_line: 6} ]}
+{ cmd: "EDIT_FILE", file: “gameGenerator.js" "language": "scss", editions: [ {start_line: 5, end_line: 6} ]}
 
 Ajouter ou supprimer des commentaires :
 Soit le fichier actions.scss :
@@ -70,14 +70,16 @@ Je te renverrai alors tous les éléments que tu m’auras demandé, les uns à 
 
 Cela nous permettra également d’automatiser le processus pour t'utiliser comme service.
 
-Crée également un package.json et un fichier TODO.md avec CREATE_FILE si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir) avant de commencer les développements.
+Crée également un package.json et un fichier TODO.md avec CREATE_FILE si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir ainsi que les sous-étapes, avec une description détaillée) avant de commencer les développements.
 Cela te permettra de t'orienter facilement dans les actions à mener par la suite.
+
+Mets un minimum de code ou de style à tes composants, ainsi que des commentaires systématiques sur chaque composant
 
 On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss)
 
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
 - avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier README.md' }
-- les éventuelles modifications de code (EDIT_FILE)
+- les éventuelles modifications de code (CREATE_FILE,EDIT_FILE)
 - exécuter une commande  { "cmd":"EXEC", "cmdLine": "node chat.js", envVars: {"OPENAI_API_KEY": "..."}}
 - exécuter une commande périodiquement { "cmd":"EXEC", "cmdLine": "node cron.js", period:"*/5 * * * *"}
 - sauvegarder des données : { "cmd": "SAVE_DATA", name: "Websites", value: [{"name": "primals.net"}]}
@@ -86,10 +88,9 @@ Renvoie uniquement une liste des commandes que tu souhaites utiliser au format J
 Tu dois connaitre les fichiers disponibles, et si tu as besoin de la structure du dossier, tu peux lancer 'ls -la'
 
 Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets, des crochets et des accolades.
-Le JSON ne doit pas utiliser les string literals mais les guillemets, doit être sur une seule ligne, et sans commentaire.
-
-tel quel :
-{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", \"content\": \"## TODOLIST\n\n- [ ] Créer le squelette applicatif\n- [ ] Créer le système de rendu\" } ] }`;
+Le JSON ne doit pas utiliser les string literals mais les guillements et ne fais pas de retours à la ligne.
+n'applique aucun traitement au JSON normalisé et Retourne au format :
+{ actions : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", \"content\": \"## TODOLIST\n\n- [ ] Créer le squelette applicatif\n- [ ] Créer le système de rendu\" } ] }`
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -173,6 +174,31 @@ app.get('/issues', (req, res) => {
       res.json({data: data});
     }catch (e){
       res.json({success: false});
+    }
+  });
+});
+
+app.post('/gen/actions', (req, res) => {
+  const actions = req.body.actions || [];
+  actions.forEach(action => {
+    if (action.cmd === "CREATE_FILE") {
+      fs.writeFileSync("users/" + action.file, action.content, { encoding: "utf-8" })
+    } else if (action.cmd === "EDIT_FILE") {
+      const lines = fs.readFileSync("users/" + action.file, { encoding: "utf-8" }).split("\n");
+      let ind = 0;
+      action.editions?.forEach(ev => {
+        const start_line = parseInt(ev.start_line, 10);
+        if (start_line && lines) {
+          lines.splice(start_line - 1, 1);
+        } else if (ev.insert_content) {
+          lines.splice(start_line - 1, 0, ev.insert_content);
+          ind--;
+        } else if (ev.new_content) {
+          lines.splice(start_line - 1, 0, ev.new_content);
+          ind--;
+        }
+      })
+      fs.writeFileSync("users/" + action.file, lines.join("\n"), { encoding: "utf-8" })
     }
   });
 });
