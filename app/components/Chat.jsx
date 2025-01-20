@@ -1,23 +1,79 @@
 import { useChat } from 'ai/react';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import "./Chat.scss"
 import Button from './Button.jsx';
 import { Trans } from 'react-i18next';
 import Markdown from 'react-markdown';
 import { CodeBlock, dracula } from 'react-code-blocks';
-import { FaEdit, FaFile } from 'react-icons/fa';
+import { FaBars, FaBook, FaEdit, FaFile, FaMinus, FaPlay, FaRunning, FaStop } from 'react-icons/fa';
+import { FaLinesLeaning } from 'react-icons/fa6';
+import { TextField } from '../Field.jsx';
+import ThreadsModal from './ThreadsModal.jsx';
+import { DialogProvider } from './Dialog.jsx';
 
 const REGEXP_CODE = new RegExp("```([^`]*)```", "g");
 export const Chat = ({project}) => {
 
+  const [isRunning, setIsRunning] = useState(false);
+  const promptDefault = 'Analyse la prochaine étape et code tout que tu peux améliorer de façon détaillée (crée/édite aussi la TODO.md si tu as finalisé l\'étape)';
   const [files, setFiles] = useState([]);
   const apiKeys = [];
   const promptId = 'e';
   const contextOptimizationEnabled = false;
   const initialMessages = [];
+
+  const [isFinishedTriggered, setFinishedTriggered] = useState(false);
+  const onFinish = async (message, response) => {
+    const usage = response.usage;
+
+    let jsonData;
+    try {
+      jsonData = JSON.parse(message.content);
+    } catch (e) {
+
+    }
+    if( jsonData && !jsonData.actions ) {
+      jsonData = {actions: [jsonData]}
+    }
+
+    // handle markdown JSON commands and returns the actions traces
+    try {
+      const res = await fetch('/api/project/'+project.hash+'/actions', {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: 'POST',
+        body: JSON.stringify({actions: jsonData.actions})
+      });
+      if( res.ok ){
+        const json = await res.json();
+        console.log(json.actions);
+      }
+    } catch (e){
+      console.log("error", e)
+    }
+
+      setFinishedTriggered(true);
+    console.log('Finished streaming');
+  };
+
+
+    // send message when running
+  useEffect(() => {
+    if( isFinishedTriggered && isRunning ){
+      setMessages(messages => [...messages,
+        {
+          id: `${new Date().getTime()}`,
+          role: 'user',
+          content: promptDefault,
+        }]);
+      reload();
+      setFinishedTriggered(false);
+    }
+  }, [isFinishedTriggered, isRunning]);
 
   const { messages, isLoading, input, handleInputChange, setInput, stop, append, setMessages, reload } = useChat({
     api: '/api/chat',
@@ -30,38 +86,7 @@ export const Chat = ({project}) => {
         'There was an error processing your request: ' + (error.message ? error.message : 'No details were returned'),
       );
     },
-    onFinish: async (message, response) => {
-      const usage = response.usage;
-
-      let jsonData;
-      try {
-        jsonData = JSON.parse(message.content);
-      } catch (e) {
-
-      }
-      if( jsonData && !jsonData.actions ) {
-        jsonData = {actions: [jsonData]}
-      }
-
-      // handle markdown JSON commands and returns the actions traces
-      try {
-        const res = await fetch('/api/project/'+project.hash+'/actions', {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: 'POST',
-          body: JSON.stringify({actions: jsonData.actions})
-        });
-        if( res.ok ){
-          const json = await res.json();
-          console.log(json.actions);
-        }
-      } catch (e){
-        console.log("error", e)
-      }
-
-      console.log('Finished streaming');
-    },
+    onFinish: onFinish,
     initialMessages
   });
 
@@ -72,7 +97,7 @@ export const Chat = ({project}) => {
       {
         id: `${new Date().getTime()}`,
         role: 'user',
-        content: prompt ? prompt : (messages.length > 0 ? 'Analyse la prochaine étape et code tout que tu peux améliorer de façon détaillée (crée/édite aussi la TODO.md si tu as finalisé l\'étape)' : 'Etonne-moi, fier codeur !'),
+        content: prompt ? prompt : (messages.length > 0 ? promptDefault : 'Etonne-moi, fier codeur !'),
       }]);
     reload();
     setPrompt('');
@@ -165,13 +190,28 @@ export const Chat = ({project}) => {
       </div>
     })
   }, [messages])
-  return <div className="chat">
 
+  const [promptSearch, setPromptSearch] = useState('');
+  const [showThreadModal, setThreadModalVisible] = useState(false);
+
+  return <div className="chat">
+    <DialogProvider>
+      {showThreadModal && <ThreadsModal threads={project.threads ||[]} onClose={() => setThreadModalVisible(false)} />}
+    </DialogProvider>
     <div className="chat-messages">
       {memMessages}
     </div>
     <div className="chat-prompt" ref={chatRef}>
-    <textarea
+      <div className={"actions"}>
+        <div className="field-iconed">
+          <TextField value={promptSearch} onChange={e => setPromptSearch(e.target.value)} />
+          <FaBook title={"Prompts"} />
+        </div>
+        <FaBars onClick={() => setThreadModalVisible(true)} title="Threads"/>
+        {!isRunning && <FaPlay onClick={() => setIsRunning(true)} title="Start autoplay"/>}
+        {isRunning && <FaStop onClick={() => setIsRunning(false)} title="Stop autoplay"/>}
+      </div>
+      <textarea
       placeholder="Demandez à l'IA de vous créer un outil, de faire une recherche sur le web, ou de persister des données..."
       rows={8} value={prompt} onChange={e => setPrompt(e.target.value)}>
     </textarea>

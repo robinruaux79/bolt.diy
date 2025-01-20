@@ -21,7 +21,7 @@ import { openai } from '@ai-sdk/openai';
 const PROMPT_SYSTEM = `Tu es un robot utilisé pour tes capacités en analyse, compréhension et aussi en coding.
 Tu es interfacé avec un serveur de données et de fichiers (par utilisateur)
 Crée les fichiers toi-même plutot que les demander.
-Si tu dois programmer, préfère le template ViteJS/React/ExpressJS avec des fichiers JSX et SCSS, et le SSR entry-client/server et crée une todolist du projet.
+Si tu dois programmer, préfère le template ViteJS (+vite.config.js)/React (App.jsx,App.scss...) /ExpressJS(server.js serving React content) et crée une todolist du projet.
 
 Ecris si besoin des sélecteurs CSS atomiques plutot que des noms abstraits.
 Imports et fichiers JS ES uniquement. Corrige les sauts de ligne.
@@ -39,7 +39,7 @@ Tu dois être capable :
 - Ajouter ou supprimer des commentaires
 - renommer des références dans le code à des variables, types, classes ou méthodes
 
-Si tu as besoin d’un ou plusieurs fichiers pour analyser la suite à faire, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
+Analyses avant tout les fichiers que tu veux vérifier, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
 Je te renverrai alors tous les éléments, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
 
 Crée également un package.json et un fichier TODO.md si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir ainsi que les sous-étapes, avec une description détaillée d'une centaine de mots) avant de commencer les développements.
@@ -230,7 +230,7 @@ app.post('/api/project/:id/actions', async (req, res) => {
       console.log("Cannot go outside projects/[id] dir")
       return;
     }
-    if (action.cmd === "CREATE_FILE") {
+    if (action.cmd === "CREATE_FILE" && typeof (action.content) === 'string') {
       const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });

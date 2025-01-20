@@ -6,6 +6,7 @@ import Button from './Button.jsx';
 import "./Project.scss"
 import { Chat } from './components/Chat.jsx';
 import { useParams } from 'react-router-dom';
+import { DialogProvider } from './components/Dialog.jsx';
 
 export const Project = ({ children, project = {}, user = {}, onProjectLoaded }) => {
 
@@ -24,6 +25,10 @@ export const Project = ({ children, project = {}, user = {}, onProjectLoaded }) 
       }
     })
   }, [params])
+
+  useEffect(() => {
+    console.log("o")
+  }, []);
   const [currentProject, setCurrentProject] = useState(project);
    const mutationNewProject = useMutation(() => {
     const project= {

@@ -12,17 +12,14 @@ const queryClient = new QueryClient()
 import { usePreferredColorScheme} from "./hooks.js";
 import { Chat } from './components/Chat.jsx';
 import { Project } from './Project.jsx';
+import { DialogProvider } from './components/Dialog.jsx';
 
 const PrimalsBar = lazy(
     () => import("../../primals/src/components/sso/PrimalsBar.jsx"),
 );
 
 function App() {
-    const date = new Date();
-    const navigate = useNavigate();
     const theme = usePreferredColorScheme();
-
-    const [resetTime, setResetTime] = useState(0);
     const bar = <Suspense>
             <PrimalsBar
                 title={
