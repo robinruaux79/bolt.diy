@@ -106,7 +106,8 @@ export const Chat = ({project}) => {
   const chatRef = useRef(null);
 
   useEffect(() => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    //window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
   const memMessages = useMemo(() => {
@@ -198,10 +199,10 @@ export const Chat = ({project}) => {
     <DialogProvider>
       {showThreadModal && <ThreadsModal threads={project.threads ||[]} onClose={() => setThreadModalVisible(false)} />}
     </DialogProvider>
-    <div className="chat-messages">
+    <div className="chat-messages" ref={chatRef}>
       {memMessages}
     </div>
-    <div className="chat-prompt" ref={chatRef}>
+    <div className="chat-prompt">
       <div className={"actions"}>
         <div className="field-iconed">
           <TextField value={promptSearch} onChange={e => setPromptSearch(e.target.value)} />

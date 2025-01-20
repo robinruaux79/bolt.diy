@@ -1,7 +1,11 @@
 .chat {
-  position: relative;
+  .chat-messages {
+    height: 70vh;
+    overflow: scroll;
+  }
   .chat-prompt {
     width: 100%;
+    height: 24vh;
     max-width: 480px;
     margin: 0 auto;
     .field-iconed, .actions {
