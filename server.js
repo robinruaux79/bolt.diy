@@ -16,6 +16,7 @@ import {createServer} from "vite";
 import http from "http";
 import { createDataStream, streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI, google } from '@ai-sdk/google';
 
 
 const PROMPT_SYSTEM = `Tu es un robot utilisé pour tes capacités en analyse, compréhension et aussi en coding.
@@ -65,7 +66,7 @@ Sois complet dans ton approche: ne mets pas de commentaires pour reporter le cod
 Tu n'as pas de limite de caractères alors...
 
 Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets (pas de string literals) des crochets et des accolades.
-Ta réponse ne doit comporter aucun saut de ligne. Retourne ce JSON au format :
+Ta réponse ne doit comporter aucun saut de ligne. Retourne ce JSON au format brut suivant (pas en markdown) :
 { "actions" : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", "file": "TODO.md", "language": "markdown", \"content\": \"## TODOLIST\\n\\n- [ ] Créer le squelette applicatif\\n- [ ] Créer le système de rendu\" } ] }`
 
 // Constants
@@ -191,7 +192,7 @@ app.post('/api/project', async (req, res)=>{
   if( collision ){
     return res.json({success: false, error: 'Collision detected. Please retry.'});
   }
-  await projectsCollection.insertOne({hash, name, updatedAt: new Date().getTime() });
+  await projectsCollection.insertOne({hash, name, files: [], updatedAt: new Date().getTime() });
   const project = await projectsCollection.findOne({hash});
   if( project ){
     return res.json({success: true, project});
@@ -223,6 +224,7 @@ app.post('/api/project/:id/actions', async (req, res) => {
   if (!project){
     return res.json({success: false })
   }
+  let updateFiles;
   const actions = req.body.actions || [];
   actions.forEach(action => {
     const file = "projects/" + project.hash + "/" +action.file;
@@ -235,11 +237,12 @@ app.post('/api/project/:id/actions', async (req, res) => {
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
+      project.files.push(file);
+      updateFiles = true;
     } else if (action.cmd === "EXEC") {
 
     } else if (action.cmd === "EDIT_FILE") {
       const lines = fs.readFileSync(file, { encoding: "utf-8" }).split("\n");
-      let ind = 0;
       action.editions?.forEach(ev => {
         const start_line = parseInt(ev.start_line, 10);
         if (ev.insert_content) {
@@ -254,21 +257,29 @@ app.post('/api/project/:id/actions', async (req, res) => {
     }
   });
 
+  const set = { updatedAt: new Date().getTime() };
+  if( updateFiles ){
+    set.files = project.files;
+  }
   await projectsCollection.updateOne(filter, {
-    "$set": { updatedAt: new Date().getTime() }
+    "$set": set
   })
   res.json({success: true});
 });
-
 app.post('/api/chat', async (req, res) =>{
   const { messages, files, promptId, contextOptimization } = req.body;
 
+
+  const google = createGoogleGenerativeAI({
+    // custom settings
+    apiKey: 'AIzaSyD_YZHvV7NB68pssrp5tfBiyFwDy9kZYXs'
+  });
     const result = await streamText({
       messages: req.body.messages,
       system: PROMPT_SYSTEM,
-      model: openai('gpt-3.5-turbo')
+      model: google('gemini-1.5-pro-latest')
+      //model: openai('gpt-3.5-turbo')
     });
-
     res.set('Connection', 'keep-alive');
     res.set('Content-Type', 'text/event-stream');
 

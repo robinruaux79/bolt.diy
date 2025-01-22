@@ -49,7 +49,7 @@ export const Project = ({ children, project = {}, user = {}, onProjectLoaded }) 
      }});
 
   return <div className={"project"}>
-    {showNewProject && <div className="new_project">
+    {!currentProject && <div className="new_project">
       <h2>Créer un projet</h2>
       <TextField label="Nom du projet" value={projectName} onChange={e => setProjectName(e.target.value)} required maxlength={100} minlength={3} help={"Choisissez un nom entre 3 et 100 caractères pour votre projet."} />
       {user.userPlan === 'premium' && (<>

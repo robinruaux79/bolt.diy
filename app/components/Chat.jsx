@@ -91,14 +91,27 @@ export const Chat = ({project}) => {
   });
 
   const [prompt, setPrompt] = useState();
-
+  const [filesUpdated, setFilesUpdated] = useState(true);
   const handleNewMessage = () => {
-    setMessages([...messages,
+
+    const listFiles = (project.files ||[]).join('\n');
+    const fileMsg = {
+        id: `a-${new Date().getTime()}`,
+        role: 'user',
+        content: 'La liste des fichiers du projet est : \n' + listFiles
+    };
+    setFilesUpdated(false);
+
+    const msgs = [...messages,
       {
-        id: `${new Date().getTime()}`,
+        id: `b-${new Date().getTime()}`,
         role: 'user',
         content: prompt ? prompt : (messages.length > 0 ? promptDefault : 'Etonne-moi, fier codeur !'),
-      }]);
+      }];
+    if( project.files.length ) {
+      msgs.push(fileMsg);
+    }
+    setMessages(msgs);
     reload();
     setPrompt('');
   }
