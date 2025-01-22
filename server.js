@@ -237,7 +237,7 @@ app.post('/api/project/:id/actions', async (req, res) => {
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
-      project.files.push(file);
+      project.files.push(action.file);
       updateFiles = true;
     } else if (action.cmd === "EXEC") {
 
