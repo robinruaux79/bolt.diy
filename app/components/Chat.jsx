@@ -15,7 +15,7 @@ import ThreadsModal from './ThreadsModal.jsx';
 import { DialogProvider } from './Dialog.jsx';
 
 const REGEXP_CODE = new RegExp("```([^`]*)```", "g");
-export const Chat = ({project}) => {
+export const Chat = ({project, webcontainer}) => {
 
   const [isRunning, setIsRunning] = useState(false);
   const promptDefault = 'Analyse la prochaine étape et code tout que tu peux améliorer de façon détaillée (crée/édite aussi la TODO.md si tu as finalisé l\'étape)';
@@ -29,11 +29,22 @@ export const Chat = ({project}) => {
   const onFinish = async (message, response) => {
     const usage = response.usage;
 
-    let jsonData = {};
+    const json = { actions: []};
+    const lines = message.content.split("\n");
+    lines.forEach(line => {
+      try {
+        // try json formatted string
+        const action = JSON.parse(line)
+        json.actions.push(action);
+      } catch (e) {
 
+      }
+    })
+
+    console.log(lines, json)
 
     // SEND file content
-    let getFileActions = jsonData.actions.filter(a => a.cmd === "GET_FILE").map(action => ({cmd: 'GET_FILE', content: project.files[action.file] }));
+    let getFileActions = json.actions.filter(a => a.cmd === "GET_FILE").map(action => ({cmd: 'GET_FILE', content: project.files[action.file] }));
     if( getFileActions.length ){
       setMessages(messages => [...messages, {
         id: `getfile-${new Date().getTime()}`,
@@ -43,6 +54,9 @@ export const Chat = ({project}) => {
       reload();
     }
 
+    json.actions.filter(a => a.cmd === "CREATE_FILE").forEach(action => {
+      webcontainer.fs.writeFile(action.file, action.content);
+    })
     // handle markdown JSON commands and returns the actions traces
     try {
       const res = await fetch('/api/project/'+project.hash+'/actions', {
@@ -50,11 +64,11 @@ export const Chat = ({project}) => {
           "Content-Type": "application/json",
         },
         method: 'POST',
-        body: JSON.stringify({actions: jsonData.actions})
+        body: JSON.stringify({actions: json.actions})
       });
       if( res.ok ){
-        const json = await res.json();
-        console.log(json.actions);
+        const json2 = await res.json();
+        console.log(json2.actions);
       }
     } catch (e){
       console.log("error", e)
@@ -98,7 +112,7 @@ export const Chat = ({project}) => {
   const [filesUpdated, setFilesUpdated] = useState(true);
   const handleNewMessage = () => {
 
-    const listFiles = (project.files ||[]).join('\n');
+    const listFiles = Object.keys(project.files || {}).join('\n');
     const fileMsg = {
         id: `a-${new Date().getTime()}`,
         role: 'user',
@@ -112,7 +126,7 @@ export const Chat = ({project}) => {
         role: 'user',
         content: prompt ? prompt : (messages.length > 0 ? promptDefault : 'Etonne-moi, fier codeur !'),
       }];
-    if( project.files.length ) {
+    if( Object.keys(project.files).length ) {
       msgs.push(fileMsg);
     }
     setMessages(msgs);
@@ -121,6 +135,7 @@ export const Chat = ({project}) => {
   }
   const chatRef = useRef(null);
 
+  console.log(messages)
   useEffect(() => {
     chatRef.current.scrollTop = chatRef.current.scrollHeight;
     //window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
@@ -130,14 +145,6 @@ export const Chat = ({project}) => {
     return messages?.map(message => {
       if( message.role === "system")
         return <></>;
-      if (message.role === 'assistant') {
-        try {
-          json = JSON.parse(message.content);
-          console.log("JSON parsed", json)
-        } catch (e) {
-          console.log("JSON parsed", message.content)
-        }
-      }
       const json = { actions: []};
       const lines = message.content.split("\n");
       lines.forEach(line => {

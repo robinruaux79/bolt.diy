@@ -70,7 +70,9 @@ Sois complet dans ton approche: ne mets pas de commentaires pour reporter le cod
 Tu n'as pas de limite de caractères alors...
 
 Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets (pas de string literals) des crochets et des accolades.
-Ta réponse ne doit comporter que des { cmd : ... } les unes en dessous des autres.`
+Ta réponse doit comporter plusieurs lignes de commandes, chacune sur une seule ligne, et séparées entre elles par des sauts de ligne.
+{ cmd : 'GET_FILE' }
+{ cmd : 'ANALYSIS' }`
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -94,7 +96,6 @@ const opts = {
   points: 2500, // Number of points
   duration: 1, // Per second(s)
 };
-
 const rateLimiterMongo = new RateLimiterMongo(opts);
 
 const rateLimiterMiddleware = (req, res, next) => {
@@ -137,6 +138,12 @@ app.use(expressSession({
   store: MongoStore.create({ mongoUrl: dbUrl })
 }));
 app.use(rateLimiterMiddleware);
+
+app.use(function (req, res, next) {
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  next()
+})
 
 const csrfProtection = csrfDSC();
 app.use(csrfProtection)
@@ -195,7 +202,7 @@ app.post('/api/project', async (req, res)=>{
   if( collision ){
     return res.json({success: false, error: 'Collision detected. Please retry.'});
   }
-  await projectsCollection.insertOne({hash, name, files: [], updatedAt: new Date().getTime() });
+  await projectsCollection.insertOne({hash, name, files: {}, updatedAt: new Date().getTime() });
   const project = await projectsCollection.findOne({hash});
   if( project ){
     return res.json({success: true, project});
@@ -230,34 +237,20 @@ app.post('/api/project/:id/actions', async (req, res) => {
   let updateFiles;
   const actions = req.body.actions || [];
   actions.forEach(action => {
-    const file = "projects/" + project.hash + "/" +action.file;
+    /*const file = "projects/" + project.hash + "/" +action.file;
     if( !isRelativeTo(file, "projects/"+project.hash) ){
       console.log("Cannot go outside projects/[id] dir")
       return;
     }
+     */
     if (action.cmd === "CREATE_FILE" && typeof (action.content) === 'string') {
-      const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
+      /*const dir = "projects/" + project.hash + "/" + path.dirname(action.file);
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(file, action.content, { encoding: "utf-8" })
-      if (!project.files.includes(action.file))
-        project.files.push(action.file);
+      fs.writeFileSync(file, action.content, { encoding: "utf-8" })*/
+      if (!project.files[action.file])
+        project.files[action.file] = { content: action.content };
       updateFiles = true;
-    } else if (action.cmd === "EXEC") {
-
-    } else if (action.cmd === "EDIT_FILE") {
-      const lines = fs.readFileSync(file, { encoding: "utf-8" }).split("\n");
-      action.editions?.forEach(ev => {
-        const start_line = parseInt(ev.start_line, 10);
-        if (ev.insert_content) {
-          lines.splice(start_line - 1, 0, ev.insert_content);
-        } else if (ev.new_content) {
-          lines.splice(start_line - 1, 0, ev.new_content);
-        } else if (start_line) {
-          lines.splice(start_line - 1, 1);
-        }
-      })
-      fs.writeFileSync(file, lines.join("\n"), { encoding: "utf-8" })
     }
   });
 

@@ -6,11 +6,9 @@ import {StaticRouter} from "react-router-dom/server.js";
 export function render() {
     const loc = "/";
     const html = ReactDOMServer.renderToString(
-        <React.StrictMode>
-            <StaticRouter location={loc}>
-                <App />
-            </StaticRouter>
-        </React.StrictMode>
+        <StaticRouter location={loc}>
+            <App />
+        </StaticRouter>
     )
     return { html }
 }
