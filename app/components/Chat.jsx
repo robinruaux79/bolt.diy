@@ -1,7 +1,7 @@
 import { useChat } from 'ai/react';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import "./Chat.scss"
 import Button from './Button.jsx';
@@ -29,14 +29,18 @@ export const Chat = ({project}) => {
   const onFinish = async (message, response) => {
     const usage = response.usage;
 
-    let jsonData;
-    try {
-      jsonData = JSON.parse(message.content);
-    } catch (e) {
+    let jsonData = {};
 
-    }
-    if( jsonData && !jsonData.actions ) {
-      jsonData = {actions: [jsonData]}
+
+    // SEND file content
+    let getFileActions = jsonData.actions.filter(a => a.cmd === "GET_FILE").map(action => ({cmd: 'GET_FILE', content: project.files[action.file] }));
+    if( getFileActions.length ){
+      setMessages(messages => [...messages, {
+        id: `getfile-${new Date().getTime()}`,
+        role: 'user',
+        content: JSON.stringify({ actions: getFileActions })
+      }]);
+      reload();
     }
 
     // handle markdown JSON commands and returns the actions traces
@@ -98,7 +102,7 @@ export const Chat = ({project}) => {
     const fileMsg = {
         id: `a-${new Date().getTime()}`,
         role: 'user',
-        content: 'La liste des fichiers du projet est : \n' + listFiles
+        content: 'Pour te repérer, la liste des fichiers du projet est : \n' + listFiles
     };
     setFilesUpdated(false);
 
@@ -115,7 +119,6 @@ export const Chat = ({project}) => {
     reload();
     setPrompt('');
   }
-
   const chatRef = useRef(null);
 
   useEffect(() => {
@@ -125,7 +128,6 @@ export const Chat = ({project}) => {
 
   const memMessages = useMemo(() => {
     return messages?.map(message => {
-      let json;
       if( message.role === "system")
         return <></>;
       if (message.role === 'assistant') {
@@ -136,10 +138,18 @@ export const Chat = ({project}) => {
           console.log("JSON parsed", message.content)
         }
       }
-      if( json && !json.actions ) {
-        json = {actions: [json]};
-      }
-      if (Array.isArray(json?.actions)) {
+      const json = { actions: []};
+      const lines = message.content.split("\n");
+      lines.forEach(line => {
+        try {
+          // try json formatted string
+          const action = JSON.parse(line)
+          json.actions.push(action);
+        } catch (e) {
+
+        }
+      })
+      if (json.actions.length) {
         return json?.actions.map(action => {
           let html = action.content;
           if( action.cmd === 'EDIT_FILE' ){
@@ -171,36 +181,42 @@ export const Chat = ({project}) => {
                 html += "-l"+start_line + " : " + txt+"\n";
 
             })
+            return <></>
           }
           if (action.cmd === 'ANALYSIS')
             return <div className="msg msg-analysis">
-              <Markdown html>{action.content}</Markdown>
+              <Suspense><Markdown html>{action.content}</Markdown></Suspense>
+            </div>
+          if (action.cmd === 'GET_FILE')
+            return <div className="msg msg-analysis">
+              {action.role !== "user" && <>Demande du fichier {action.file}...</>}
+              {action.role === "user" && <>Envoi du fichier {action.file}...</>}
             </div>
           if (action.cmd === 'CREATE_FILE')
             return <div className="msg msg-code">
               {action.cmd === "CREATE_FILE" ? <FaFile /> : <FaEdit />}<b>{action.file}</b> ({action.language})<br />
-              <CodeBlock
+              <Suspense><CodeBlock
                 text={html}
                 language={action.language}
                 showLineNumbers
                 theme={dracula}
-              />
+              /></Suspense>
             </div>
           if( action.cmd === 'EDIT_FILE'){
-            return <><FaEdit /><b>{action.file}</b><br />
-              <CodeBlock
+            return <div className="msg msg-code"><FaEdit /><b>{action.file}</b><br />
+              <Suspense><CodeBlock
                 text={html}
                 language={"PlainText"}
                 showLineNumbers={false}
                 theme={dracula}
-              /></>
+              /></Suspense></div>
           }
-          return <div className="msg msg-code"><CodeBlock text={JSON.stringify(action)} language={'plaintext'}
-                                                          theme={dracula} /></div>
+          return <div className="msg msg-code"><Suspense><CodeBlock text={JSON.stringify(action)} language={'plaintext'}
+                                                          theme={dracula} /></Suspense></div>
         })
       }
       return <div className={`msg msg-${message.role}`}>
-        <Markdown>{message.content}</Markdown>
+        <Suspense><Markdown>{message.content}</Markdown></Suspense>
       </div>
     })
   }, [messages])

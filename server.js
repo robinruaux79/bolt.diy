@@ -40,7 +40,7 @@ Tu dois être capable :
 - Ajouter ou supprimer des commentaires
 - renommer des références dans le code à des variables, types, classes ou méthodes
 
-Analyses avant tout les fichiers que tu veux vérifier, demande-les moi sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
+Analyses avant tout les fichiers que tu veux vérifier, demande-les moi sans éditer les fichiers, sous la forme d’un JSON : { "file": “relativePath/filename.ext”, "cmd": "GET_FILE" }
 Je te renverrai alors tous les éléments, les uns à la suite des autres en JSON :  { "file": “relativePath/filename.ext”, "cmd": "GET_FILE", "content": "lecontenudufichier" } .
 
 Crée également un package.json et un fichier TODO.md si ce n'est pas déjà fait (avec une doc d'intro, la structure du projet, les étapes faites et à venir ainsi que les sous-étapes, avec une description détaillée d'une centaine de mots) avant de commencer les développements.
@@ -48,12 +48,16 @@ Cela te permettra de t'orienter facilement dans les actions à mener par la suit
 
 Mets du style à tes composants, ainsi que des commentaires systématiques et générateurs de documentation sur chaque composant.
 
+Ne fais pas de faute sur tes références et import. Exemples :
+- res.sendFile(path.join(__dirname, 'dist', 'index.html')); doit effectivement renvoyer vers un fichier 'dist/index.html'  présent dans le dossier de l'utilisateur.
+- import "Game.scss"; doit être utilisé uniquement si le fichier Game.scss existe actuellement
+
 On utilisera vite+expressJS pour le backend et react pour le frontend (composants .jsx et .scss) ainsi que le ssr entry-client/serveur.
 
 CREATE_FILE est gourmand en tokens, donc crée plutot plusieurs petits fichiers, et prend l'habitude de mettre à jour leurs références intriquées.
 
 Renvoie uniquement une liste des commandes que tu souhaites utiliser au format JSON
-- avec tes analyses au moyen d'opérations d'analyse (une par bloc) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier TODO.md' }
+- avec tes analyses au moyen d'opérations d'analyse, un par bloc (ou tout autre commentaire, description de ta part) : { cmd: 'ANALYSIS' , content: 'Je dois maintenant créer le fichier TODO.md' }
 - les éventuelles modifications de code (CREATE_FILE)
 - exécuter une commande  { "cmd":"EXEC", "cmdLine": "node chat.js", envVars: {"OPENAI_API_KEY": "..."}}
 - exécuter une commande périodiquement { "cmd":"EXEC", "cmdLine": "node cron.js", period:"*/5 * * * *"}
@@ -66,8 +70,7 @@ Sois complet dans ton approche: ne mets pas de commentaires pour reporter le cod
 Tu n'as pas de limite de caractères alors...
 
 Fais en sorte que le JSON soit correct au niveau des ouverture/fermeture des guillemets (pas de string literals) des crochets et des accolades.
-Ta réponse ne doit comporter aucun saut de ligne. Retourne ce JSON au format brut suivant (pas en markdown) :
-{ "actions" : [ { "cmd": "ANALYSIS", "content": "J\'ai étudié votre projet. Voici la todolist...' }, { \"cmd\": \"CREATE_FILE\", "file": "TODO.md", "language": "markdown", \"content\": \"## TODOLIST\\n\\n- [ ] Créer le squelette applicatif\\n- [ ] Créer le système de rendu\" } ] }`
+Ta réponse ne doit comporter que des { cmd : ... } les unes en dessous des autres.`
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -237,7 +240,8 @@ app.post('/api/project/:id/actions', async (req, res) => {
       if( !fs.existsSync(dir))
         fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(file, action.content, { encoding: "utf-8" })
-      project.files.push(action.file);
+      if (!project.files.includes(action.file))
+        project.files.push(action.file);
       updateFiles = true;
     } else if (action.cmd === "EXEC") {
 
